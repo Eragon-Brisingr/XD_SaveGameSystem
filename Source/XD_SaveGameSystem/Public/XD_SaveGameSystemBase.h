@@ -57,7 +57,7 @@ private:
 
 	void InitAutoSaveLoadSystem(class AGameModeBase* GameMode);
 
-	void ShutDownAutoSaveLoadSystem(class AARPGGameMode* ARPG_GameMode);
+	void ShutDownAutoSaveLoadSystem(class AGameModeBase* GameMode);
 
 	void StopAutoSave(UObject* WorldContextObject);
 private:
@@ -80,5 +80,4 @@ private:
 	static void EndInitLevel(ULevel* Level);
 
 	static bool IsLevelInitCompleted(ULevel* Level);
-	
 };

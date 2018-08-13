@@ -6,6 +6,7 @@
 #include <MemoryReader.h>
 #include "XD_WriteArchive.h"
 #include <BufferArchive.h>
+#include <GameFramework/GameModeBase.h>
 
 
 FARPG_Recorder UXD_SaveGameFunctionLibrary::SerializeObject(UObject* Object, ULevel* Level, TArray<UObject*>& ReferenceCollection)
@@ -44,20 +45,56 @@ UXD_SaveGameSystemBase* UXD_SaveGameFunctionLibrary::GetSaveGameSystem(UObject* 
 	return UXD_SaveGameSystemBase::Get(WorldContextObject);
 }
 
-void UXD_SaveGameFunctionLibrary::InvokeSaveGame(UObject* WorldContextObject)
+bool UXD_SaveGameFunctionLibrary::InitAutoSaveLoadSystem(class AGameModeBase* GameMode)
 {
-	if (WorldContextObject->GetWorld()->IsServer())
+	if (GameMode)
 	{
-		GetSaveGameSystem(WorldContextObject)->SaveGame(WorldContextObject);
+		if (UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(GameMode))
+		{
+			SaveGameSystem->InitAutoSaveLoadSystem(GameMode);
+			return true;
+		}
 	}
+	return false;
 }
 
-void UXD_SaveGameFunctionLibrary::InvokeLoadGame(UObject* WorldContextObject)
+bool UXD_SaveGameFunctionLibrary::ShutDownAutoSaveLoadSystem(class AGameModeBase* GameMode)
+{
+	if (GameMode)
+	{
+		if (UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(GameMode))
+		{
+			SaveGameSystem->ShutDownAutoSaveLoadSystem(GameMode);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UXD_SaveGameFunctionLibrary::InvokeSaveGame(UObject* WorldContextObject)
 {
 	if (WorldContextObject->GetWorld()->IsServer())
 	{
-		GetSaveGameSystem(WorldContextObject)->LoadGame(WorldContextObject);
+		if (UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(WorldContextObject))
+		{
+			SaveGameSystem->SaveGame(WorldContextObject);
+			return true;
+		}
 	}
+	return false;
+}
+
+bool UXD_SaveGameFunctionLibrary::InvokeLoadGame(UObject* WorldContextObject)
+{
+	if (WorldContextObject->GetWorld()->IsServer())
+	{
+		if (UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(WorldContextObject))
+		{
+			SaveGameSystem->LoadGame(WorldContextObject);
+			return true;
+		}
+	}
+	return false;
 }
 
 bool UXD_SaveGameFunctionLibrary::IsInvokeLoadGame(UObject* WorldContextObject)

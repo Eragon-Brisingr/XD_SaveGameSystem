@@ -7,7 +7,7 @@
 #include "XD_SG_WorldSettingsComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS()
 class XD_SAVEGAMESYSTEM_API UXD_SG_WorldSettingsComponent : public UActorComponent
 {
 	GENERATED_BODY()

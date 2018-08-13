@@ -28,14 +28,22 @@ public:
 	static UObject* DeserializeExistObject(const FARPG_Recorder& ARPG_Recorder, UObject* Object, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))
+	UFUNCTION(BlueprintPure, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))
 	static class UXD_SaveGameSystemBase* GetSaveGameSystem(UObject* WorldContextObject);
 
-	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))
-	static void InvokeSaveGame(UObject* WorldContextObject);
+	//在GameMode执行BeginPlay时执行
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档")
+	static bool InitAutoSaveLoadSystem(class AGameModeBase* GameMode);
+
+	//在GameMode执行EndPlay时执行
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档")
+	static bool ShutDownAutoSaveLoadSystem(class AGameModeBase* GameMode);
 
 	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))
-	static void InvokeLoadGame(UObject* WorldContextObject);
+	static bool InvokeSaveGame(UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))
+	static bool InvokeLoadGame(UObject* WorldContextObject);
 
 	UFUNCTION(BlueprintPure, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))
 	static bool IsInvokeLoadGame(UObject* WorldContextObject);

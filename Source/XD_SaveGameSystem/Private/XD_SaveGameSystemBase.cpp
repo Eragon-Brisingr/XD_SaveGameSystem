@@ -10,6 +10,7 @@
 #include <GameFramework/GameModeBase.h>
 #include <Kismet/KismetSystemLibrary.h>
 #include <Kismet/GameplayStatics.h>
+#include "XD_ActorFunctionLibrary.h"
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
@@ -25,6 +26,10 @@ UXD_SaveGameSystemBase* UXD_SaveGameSystemBase::Get(UObject* WorldContextObject)
 	if (GameInstance->Implements<UXD_SaveGame_GameInstanceInterface>())
 	{
 		return IXD_SaveGame_GameInstanceInterface::Execute_GetSaveGameSystem(GameInstance);
+	}
+	else
+	{
+		SaveGameSystem_Warning_LOG("GameInstance尚未实现XD_SaveGame_GameInstanceInterface的GetSaveGameSystem");
 	}
 
 	return nullptr;
@@ -65,7 +70,7 @@ void UXD_SaveGameSystemBase::InitAutoSaveLoadSystem(class AGameModeBase* GameMod
 	WhenActorSpawnInitActor(World);
 }
 
-void UXD_SaveGameSystemBase::ShutDownAutoSaveLoadSystem(class AARPGGameMode* ARPG_GameMode)
+void UXD_SaveGameSystemBase::ShutDownAutoSaveLoadSystem(class AGameModeBase* GameMode)
 {
 	FWorldDelegates::LevelAddedToWorld.Remove(OnLevelAdd_DelegateHandle);
 }
@@ -208,13 +213,13 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 	}
 
 	//或许有更好的时机去保存关卡
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	if (AWorldSettings* WorldSettings = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level))
 	{
-		WorldSettingsComponent->bActiveAutoSave = true;
+		UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
 	}
 	else
 	{
-		SaveGameSystem_Error_Log("关卡[%s]不存在ARPG_WorldSettings，自动保存该关卡将失效", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+		SaveGameSystem_Error_Log("关卡[%s]不存在WorldSettings，自动保存该关卡将失效", *UXD_LevelFunctionLibrary::GetLevelName(Level));
 	}
 }
 
