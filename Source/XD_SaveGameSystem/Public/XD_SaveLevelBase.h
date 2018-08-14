@@ -16,7 +16,7 @@ class XD_SAVEGAMESYSTEM_API UXD_SaveLevelBase : public USaveGame
 	
 public:
 	UPROPERTY(BlueprintReadWrite, Category = "存档")
-	TArray<FARPG_Recorder> ActorRecorders;
+	TArray<FXD_SaveGameRecorder> ActorRecorders;
 
 	UPROPERTY(BlueprintReadWrite, Category = "存档")
 	FIntVector OldWorldOrigin;

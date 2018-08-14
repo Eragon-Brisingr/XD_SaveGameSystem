@@ -21,10 +21,11 @@ class XD_SAVEGAMESYSTEM_API UXD_SaveGameSystemBase : public UObject
 	friend class UXD_SavePlayerBase;
 	friend class UXD_SaveGameFunctionLibrary;
 	friend class UXD_SG_WorldSettingsComponent;
+	friend struct FXD_ReadArchive;
 public:
 	UXD_SaveGameSystemBase();
 	
-	static UXD_SaveGameSystemBase* Get(UObject* WorldContextObject);
+	static UXD_SaveGameSystemBase* Get(const UObject* WorldContextObject);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
 	uint8 bInvokeLoadGame : 1;
@@ -39,10 +40,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
 	TSubclassOf<class UXD_SaveLevelBase> SaveLevelClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
+	TSubclassOf<class UXD_SavePlayerBase> SavePlayerClass;
 private:
 	//只有读取时Spawn的Actor不执行Init
 	uint8 bShouldInitSpawnActor : 1;
-public:
+
 	void StartSpawnActorWithoutInit() { bShouldInitSpawnActor = false; }
 
 	void EndSpawnActorWithoutInit() { bShouldInitSpawnActor = true; }
@@ -67,7 +71,7 @@ private:
 
 	static FString MakeLevelSlotName(ULevel* Level);
 
-	void SaveLevel(ULevel* Level) const;
+	bool SaveLevel(ULevel* Level) const;
 
 	static bool CanSaveLevel(ULevel* Level);
 
@@ -80,4 +84,11 @@ private:
 	static void EndInitLevel(ULevel* Level);
 
 	static bool IsLevelInitCompleted(ULevel* Level);
+
+private:
+	bool SavePlayer(class APlayerController* Player);
+
+	bool SaveAllPlayer(const UObject* WorldContextObject);
+
+	APawn* TryLoadPlayer(class APlayerController* Player);
 };

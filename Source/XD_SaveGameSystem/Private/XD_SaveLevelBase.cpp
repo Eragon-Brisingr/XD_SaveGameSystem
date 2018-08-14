@@ -113,7 +113,7 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 				int LoadCount = 0;
 				while (LoadCount < SaveLevelBase->ActorRecorders.Num())
 				{
-					FARPG_Recorder& ARPG_Recorder = SaveLevelBase->ActorRecorders[LoadCount];
+					FXD_SaveGameRecorder& ARPG_Recorder = SaveLevelBase->ActorRecorders[LoadCount];
 					UXD_SaveGameFunctionLibrary::DeserializeObject(ARPG_Recorder, Level.Get(), ObjectReferenceCollection, SaveLevelBase->OldWorldOrigin);
 
 					++LoadCount;

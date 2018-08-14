@@ -10,12 +10,12 @@
  * 
  */
 USTRUCT(BlueprintType)
-struct XD_SAVEGAMESYSTEM_API FARPG_Recorder
+struct XD_SAVEGAMESYSTEM_API FXD_SaveGameRecorder
 {
 	GENERATED_BODY()
 public:
-	FARPG_Recorder() = default;
-	FARPG_Recorder(const TArray<uint8>& Data)
+	FXD_SaveGameRecorder() = default;
+	FXD_SaveGameRecorder(const TArray<uint8>& Data)
 		:Data(Data)
 	{}
 

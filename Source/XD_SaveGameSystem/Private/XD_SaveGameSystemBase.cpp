@@ -11,16 +11,18 @@
 #include <Kismet/KismetSystemLibrary.h>
 #include <Kismet/GameplayStatics.h>
 #include "XD_ActorFunctionLibrary.h"
+#include "XD_SavePlayerBase.h"
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
 	:SaveLevelClass(UXD_SaveLevelBase::StaticClass()),
+	SavePlayerClass(UXD_SavePlayerBase::StaticClass()),
 	bShouldInitSpawnActor(true)
 {
 
 }
 
-UXD_SaveGameSystemBase* UXD_SaveGameSystemBase::Get(UObject* WorldContextObject)
+UXD_SaveGameSystemBase* UXD_SaveGameSystemBase::Get(const UObject* WorldContextObject)
 {
 	UGameInstance* GameInstance = WorldContextObject->GetWorld()->GetGameInstance();
 	if (GameInstance->Implements<UXD_SaveGame_GameInstanceInterface>())
@@ -107,11 +109,7 @@ void UXD_SaveGameSystemBase::SaveGame(UObject* WorldContextObject)
 		}
 	}
 
-// 	//保存所有玩家
-// 	if (AARPGGameMode* ARPGGameMode = Cast<AARPGGameMode>(UGameplayStatics::GetGameMode(WorldContextObject)))
-// 	{
-// 		ARPGGameMode->SaveAllPlayer();
-// 	}
+	SaveAllPlayer(WorldContextObject);
 }
 
 bool UXD_SaveGameSystemBase::CanCompletedSaveGame(UObject* WorldContextObject) const
@@ -239,10 +237,10 @@ FString UXD_SaveGameSystemBase::MakeLevelSlotName(ULevel* Level)
 	return Get(Level)->MakeFullSlotName(TEXT("Level"), UXD_LevelFunctionLibrary::GetLevelName(Level));
 }
 
-void UXD_SaveGameSystemBase::SaveLevel(ULevel* Level) const
+bool UXD_SaveGameSystemBase::SaveLevel(ULevel* Level) const
 {
 	UXD_SaveLevelBase* SaveLevelObject = NewObject<UXD_SaveLevelBase>(GetTransientPackage(), SaveLevelClass);
-	SaveLevelObject->SaveLevel(Level);
+	return SaveLevelObject->SaveLevel(Level);
 }
 
 bool UXD_SaveGameSystemBase::CanSaveLevel(ULevel* Level)
@@ -312,5 +310,35 @@ bool UXD_SaveGameSystemBase::IsLevelInitCompleted(ULevel* Level)
 	return false;
 }
 
+bool UXD_SaveGameSystemBase::SavePlayer(class APlayerController* Player)
+{
+	UXD_SavePlayerBase* SavePlayerObject = NewObject<UXD_SavePlayerBase>(GetTransientPackage(), SavePlayerClass);
+	return SavePlayerObject->SavePlayer(Player);
+}
 
+bool UXD_SaveGameSystemBase::SaveAllPlayer(const UObject* WorldContextObject)
+{
+	bool Result = true;
+	UWorld* World = WorldContextObject->GetWorld();
+	for (auto PlayerControllerIterator = World->GetPlayerControllerIterator(); PlayerControllerIterator; ++PlayerControllerIterator)
+	{
+		APlayerController* PlayerController = PlayerControllerIterator->Get();
+		Result &= SavePlayer(PlayerController);
+	}
+	return Result;
+}
+
+APawn* UXD_SaveGameSystemBase::TryLoadPlayer(class APlayerController* Player)
+{
+	FString SlotName = GetDefault<UXD_SavePlayerBase>(SavePlayerClass)->GetFullPlayerSlotName(Player);
+	if (UXD_SavePlayerBase* SavePlayerObject = Cast<UXD_SavePlayerBase>(UGameplayStatics::LoadGameFromSlot(SlotName, UserIndex)))
+	{
+		APawn* Pawn = SavePlayerObject->LoadPlayer(Player);
+		return Pawn;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
 

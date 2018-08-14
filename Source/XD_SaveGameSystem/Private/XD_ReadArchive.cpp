@@ -5,6 +5,7 @@
 #include "XD_LevelFunctionLibrary.h"
 #include "XD_SaveGameInterface.h"
 #include "XD_SaveGameSystemUtility.h"
+#include "XD_SaveGameSystemBase.h"
 
 
 FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
@@ -216,12 +217,12 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				ActorSpawnParameters.OverrideLevel = Level.Get();
 				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-// 				UARPG_SaveGameSystem* SaveGameSystem = UARPG_SaveGameFunctionLibrary::GetSaveGameSystem(Level.Get());
-// 				SaveGameSystem->StartSpawnActorWithoutInit();
-// 				{
-// 					Actor = Level->GetWorld()->SpawnActor<AActor>(ActorClass, ActorTransForm, ActorSpawnParameters);
-// 				}
-// 				SaveGameSystem->EndSpawnActorWithoutInit();
+				UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(Level.Get());
+				SaveGameSystem->StartSpawnActorWithoutInit();
+				{
+					Actor = Level->GetWorld()->SpawnActor<AActor>(ActorClass, ActorTransForm, ActorSpawnParameters);
+				}
+				SaveGameSystem->EndSpawnActorWithoutInit();
 			}
 			int32 AddIndex = ObjectReferenceCollection.Add(Actor);
 
