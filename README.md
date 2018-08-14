@@ -6,8 +6,10 @@ GameInstance去实现XD_SaveGame_GameInstanceInterface的GetSaveGameSystem函数
 
 GameMode  BeginPlay时调用InitAutoSaveLoadSystem
           EndPlay时调用ShutDownAutoSaveLoadSystem
+          SpawnDefaultPawnFor时调用TryLoadPlayer
+
 拓展：     
-Actor只要使用XD_SaveGameInterface就会被自动保存，且属性的元信息中存在SaveGame的变量及Outer为该Actor的引用都会被保存，软引用也会记录下来。
+Actor只要使用XD_SaveGameInterface就会被自动保存，且属性的元信息中存在SaveGame的变量及【Object的Outer为该Actor】或【Actor的Owner为该Actor】的引用都会被保存，软引用也会记录下来。
 
 使用：
 InvokeSaveGame
