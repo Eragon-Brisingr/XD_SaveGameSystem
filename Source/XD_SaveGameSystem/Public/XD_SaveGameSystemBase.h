@@ -22,6 +22,7 @@ class XD_SAVEGAMESYSTEM_API UXD_SaveGameSystemBase : public UObject
 	friend class UXD_SaveGameFunctionLibrary;
 	friend class UXD_SG_WorldSettingsComponent;
 	friend struct FXD_ReadArchive;
+	friend class UXD_AutoSavePlayerLamdba;
 public:
 	UXD_SaveGameSystemBase();
 	
@@ -86,9 +87,26 @@ private:
 	static bool IsLevelInitCompleted(ULevel* Level);
 
 private:
-	bool SavePlayer(class APlayerController* Player);
+	bool SavePlayer(class APlayerController* Player, APawn* Pawn = nullptr, class APlayerState* PlayerState = nullptr);
 
 	bool SaveAllPlayer(const UObject* WorldContextObject);
 
 	APawn* TryLoadPlayer(class APlayerController* Player);
+
+	void RegisterAutoSavePlayer(class APawn* Pawn);
+};
+
+UCLASS()
+class UXD_AutoSavePlayerLamdba : public UObject
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	class APlayerController* PlayerContoller;
+
+	UPROPERTY()
+	class APlayerState* PlayerState;
+
+	UFUNCTION()
+	void WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason::Type EndPlayReason);
 };

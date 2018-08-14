@@ -62,4 +62,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "游戏|存档")
 	static class APawn* TryLoadPlayer(class APlayerController* Player);
+
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档")
+	static void RegisterAutoSavePlayer(class APawn* Pawn);
 };

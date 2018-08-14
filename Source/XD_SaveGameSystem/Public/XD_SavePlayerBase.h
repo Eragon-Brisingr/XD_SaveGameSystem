@@ -26,18 +26,14 @@ public:
 
 public:
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|存档")
-	class APawn* GetControlledPawn(APlayerController* PlayerController) const;
-	virtual class APawn* GetControlledPawn_Implementation(APlayerController* PlayerController) const;
+	FString GetPlayerSaveSlotName(class APlayerState* PlayerState) const;
+	virtual FString GetPlayerSaveSlotName_Implementation(class APlayerState* PlayerState) const;
+
+	FString GetFullPlayerSlotName(class APlayerState* PlayerState) const;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|存档")
-	FString GetPlayerSaveSlotName(APlayerController* PlayerController) const;
-	virtual FString GetPlayerSaveSlotName_Implementation(APlayerController* PlayerController) const;
-
-	FString GetFullPlayerSlotName(APlayerController* PlayerController) const;
-
-	UFUNCTION(BlueprintNativeEvent, Category = "游戏|存档")
-	bool SavePlayer(APlayerController* PlayerController);
-	virtual bool SavePlayer_Implementation(APlayerController* PlayerController);
+	bool SavePlayer(APlayerController* PlayerController, APawn* Pawn, class APlayerState* PlayerState);
+	virtual bool SavePlayer_Implementation(APlayerController* PlayerController, APawn* Pawn, class APlayerState* PlayerState);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|存档")
 	class APawn* LoadPlayer(APlayerController* PlayerController);

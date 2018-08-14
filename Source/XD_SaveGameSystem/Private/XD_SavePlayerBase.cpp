@@ -13,38 +13,31 @@
 
 
 
-class APawn* UXD_SavePlayerBase::GetControlledPawn_Implementation(APlayerController* PlayerController) const
+FString UXD_SavePlayerBase::GetPlayerSaveSlotName_Implementation(class APlayerState* PlayerState) const
 {
-	return PlayerController->GetPawn();
-}
-
-FString UXD_SavePlayerBase::GetPlayerSaveSlotName_Implementation(APlayerController* PlayerController) const
-{
-	APlayerState* PlayerState = PlayerController->PlayerState;
 	FString SlotName = PlayerState->GetPlayerName().Left(PlayerState->GetPlayerName().Find(TEXT("-"), ESearchCase::IgnoreCase, ESearchDir::FromEnd));
 	return SlotName;
 }
 
-FString UXD_SavePlayerBase::GetFullPlayerSlotName(APlayerController* PlayerController) const
+FString UXD_SavePlayerBase::GetFullPlayerSlotName(class APlayerState* PlayerState) const
 {
-	return UXD_SaveGameSystemBase::Get(PlayerController)->MakeFullSlotName(TEXT("Players"), GetPlayerSaveSlotName(PlayerController));
+	return UXD_SaveGameSystemBase::Get(PlayerState)->MakeFullSlotName(TEXT("Players"), GetPlayerSaveSlotName(PlayerState));
 }
 
-bool UXD_SavePlayerBase::SavePlayer_Implementation(APlayerController* PlayerController)
+bool UXD_SavePlayerBase::SavePlayer_Implementation(APlayerController* PlayerController, APawn* Pawn, class APlayerState* PlayerState)
 {
-	APawn* PlayerCharacter = GetControlledPawn(PlayerController);
 	TArray<UObject*> ReferenceCollection;
 	PlayerControllerData = UXD_SaveGameFunctionLibrary::SerializeObject(PlayerController, PlayerController->GetLevel(), ReferenceCollection);
-	PlayerCharacterData = UXD_SaveGameFunctionLibrary::SerializeObject(PlayerCharacter, PlayerCharacter->GetLevel(), ReferenceCollection);
-	OldWorldOrigin = UGameplayStatics::GetWorldOriginLocation(PlayerCharacter);
+	PlayerCharacterData = UXD_SaveGameFunctionLibrary::SerializeObject(Pawn, Pawn->GetLevel(), ReferenceCollection);
+	OldWorldOrigin = UGameplayStatics::GetWorldOriginLocation(Pawn);
 
-	FString PlayerSaveSlotName = GetPlayerSaveSlotName(PlayerController);
+	FString PlayerSaveSlotName = GetPlayerSaveSlotName(PlayerState);
 
 	UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(PlayerController);
 
-	bool Result = UGameplayStatics::SaveGameToSlot(this, GetFullPlayerSlotName(PlayerController), SaveGameSystem->UserIndex);
+	bool Result = UGameplayStatics::SaveGameToSlot(this, GetFullPlayerSlotName(PlayerState), SaveGameSystem->UserIndex);
 
-	SaveGameSystem_Display_Log("保存玩家[%s]，角色%s，控制器%s", *PlayerSaveSlotName, *UXD_DebugFunctionLibrary::GetDebugName(PlayerCharacter), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
+	SaveGameSystem_Display_Log("保存玩家[%s]，角色%s，控制器%s", *PlayerSaveSlotName, *UXD_DebugFunctionLibrary::GetDebugName(Pawn), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
 
 	return Result;
 }
@@ -56,7 +49,7 @@ class APawn* UXD_SavePlayerBase::LoadPlayer_Implementation(APlayerController* Pl
 	APawn* PlayerCharacter = CastChecked<APawn>(UXD_SaveGameFunctionLibrary::DeserializeObject(PlayerCharacterData, PlayerController->GetLevel(), ReferenceCollection, OldWorldOrigin));
 	PlayerController->Possess(PlayerCharacter);
 
-	SaveGameSystem_Display_Log("读取玩家[%s]，角色%s，控制器%s", *GetPlayerSaveSlotName(PlayerController), *UXD_DebugFunctionLibrary::GetDebugName(PlayerCharacter), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
+	SaveGameSystem_Display_Log("读取玩家[%s]，角色%s，控制器%s", *GetPlayerSaveSlotName(PlayerController->PlayerState), *UXD_DebugFunctionLibrary::GetDebugName(PlayerCharacter), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
 
 	return PlayerCharacter;
 }

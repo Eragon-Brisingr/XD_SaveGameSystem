@@ -310,10 +310,20 @@ bool UXD_SaveGameSystemBase::IsLevelInitCompleted(ULevel* Level)
 	return false;
 }
 
-bool UXD_SaveGameSystemBase::SavePlayer(class APlayerController* Player)
+bool UXD_SaveGameSystemBase::SavePlayer(class APlayerController* Player, APawn* Pawn /*= nullptr*/, class APlayerState* PlayerState /*= nullptr*/)
 {
+	if (Pawn == nullptr)
+	{
+		Pawn = Player->GetPawn();
+	}
+	if (PlayerState == nullptr)
+	{
+		PlayerState = Player->PlayerState;
+	}
+
 	UXD_SavePlayerBase* SavePlayerObject = NewObject<UXD_SavePlayerBase>(GetTransientPackage(), SavePlayerClass);
-	return SavePlayerObject->SavePlayer(Player);
+
+	return SavePlayerObject->SavePlayer(Player, Pawn, PlayerState);
 }
 
 bool UXD_SaveGameSystemBase::SaveAllPlayer(const UObject* WorldContextObject)
@@ -330,7 +340,7 @@ bool UXD_SaveGameSystemBase::SaveAllPlayer(const UObject* WorldContextObject)
 
 APawn* UXD_SaveGameSystemBase::TryLoadPlayer(class APlayerController* Player)
 {
-	FString SlotName = GetDefault<UXD_SavePlayerBase>(SavePlayerClass)->GetFullPlayerSlotName(Player);
+	FString SlotName = GetDefault<UXD_SavePlayerBase>(SavePlayerClass)->GetFullPlayerSlotName(Player->PlayerState);
 	if (UXD_SavePlayerBase* SavePlayerObject = Cast<UXD_SavePlayerBase>(UGameplayStatics::LoadGameFromSlot(SlotName, UserIndex)))
 	{
 		APawn* Pawn = SavePlayerObject->LoadPlayer(Player);
@@ -342,3 +352,24 @@ APawn* UXD_SaveGameSystemBase::TryLoadPlayer(class APlayerController* Player)
 	}
 }
 
+void UXD_SaveGameSystemBase::RegisterAutoSavePlayer(class APawn* Pawn)
+{
+	if (APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController()))
+	{
+		UXD_AutoSavePlayerLamdba* AutoSavePlayerLamdba = NewObject<UXD_AutoSavePlayerLamdba>(Pawn);
+		AutoSavePlayerLamdba->SetFlags(RF_StrongRefOnFrame);
+		AutoSavePlayerLamdba->PlayerContoller = PlayerController;
+		AutoSavePlayerLamdba->PlayerState = PlayerController->PlayerState;
+		Pawn->OnEndPlay.AddDynamic(AutoSavePlayerLamdba, &UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame);
+	}
+}
+
+void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason::Type EndPlayReason)
+{
+	ClearFlags(RF_StrongRefOnFrame);
+
+	if (PlayerContoller)
+	{
+		UXD_SaveGameSystemBase::Get(PlayerContoller)->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
+	}
+}

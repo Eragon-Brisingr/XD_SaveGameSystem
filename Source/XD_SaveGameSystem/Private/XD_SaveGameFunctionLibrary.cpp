@@ -134,3 +134,11 @@ class APawn* UXD_SaveGameFunctionLibrary::TryLoadPlayer(class APlayerController*
 	}
 	return nullptr;
 }
+
+void UXD_SaveGameFunctionLibrary::RegisterAutoSavePlayer(class APawn* Pawn)
+{
+	if (Pawn)
+	{
+		UXD_SaveGameSystemBase::Get(Pawn)->RegisterAutoSavePlayer(Pawn);
+	}
+}
