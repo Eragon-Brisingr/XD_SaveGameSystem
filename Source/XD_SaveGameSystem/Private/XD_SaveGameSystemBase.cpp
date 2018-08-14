@@ -12,6 +12,7 @@
 #include <Kismet/GameplayStatics.h>
 #include "XD_ActorFunctionLibrary.h"
 #include "XD_SavePlayerBase.h"
+#include <GameFramework/PlayerState.h>
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
@@ -370,6 +371,7 @@ void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason
 
 	if (PlayerContoller)
 	{
+		SaveGameSystem_Display_Log("玩家[%s]登出", *PlayerState->GetPlayerName());
 		UXD_SaveGameSystemBase::Get(PlayerContoller)->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
 	}
 }
