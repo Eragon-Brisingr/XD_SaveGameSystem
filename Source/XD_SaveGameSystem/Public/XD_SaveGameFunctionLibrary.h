@@ -18,14 +18,14 @@ class XD_SAVEGAMESYSTEM_API UXD_SaveGameFunctionLibrary : public UBlueprintFunct
 
 	//序列化与反序列化的顺序必须一致
 public:
-	UFUNCTION(BlueprintCallable, Category = "ARPG|Serialize", meta = (AutoCreateRefTerm = "ReferenceCollection"))
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (AutoCreateRefTerm = "ReferenceCollection"))
 	static FXD_SaveGameRecorder SerializeObject(UObject* Object, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection);
 
-	UFUNCTION(BlueprintCallable, Category = "ARPG|Serialize", meta = (AutoCreateRefTerm = "ReferenceCollection"))
-	static UObject* DeserializeObject(const FXD_SaveGameRecorder& ARPG_Recorder, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (AutoCreateRefTerm = "ReferenceCollection"))
+	static UObject* DeserializeObject(const FXD_SaveGameRecorder& XD_Recorder, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
 
-	UFUNCTION(BlueprintCallable, Category = "ARPG|Serialize", meta = (AutoCreateRefTerm = "ReferenceCollection", DeterminesOutputType = "Object"))
-	static UObject* DeserializeExistObject(const FXD_SaveGameRecorder& ARPG_Recorder, UObject* Object, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
+	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (AutoCreateRefTerm = "ReferenceCollection", DeterminesOutputType = "Object"))
+	static UObject* DeserializeExistObject(const FXD_SaveGameRecorder& XD_Recorder, UObject* Object, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
 	
 public:
 	UFUNCTION(BlueprintPure, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))

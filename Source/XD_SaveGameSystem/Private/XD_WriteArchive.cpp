@@ -8,7 +8,7 @@
 
 FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 {
-	struct FARPG_WriteArchiveHelper
+	struct FXD_WriteArchiveHelper
 	{
 		static EObjectArchiveType GetObjectArchiveType(UObject* Obj)
 		{
@@ -81,7 +81,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		*this << AddIndex;
 
 		//确定Obj类型
-		EObjectArchiveType ObjectArchiveType = FARPG_WriteArchiveHelper::GetObjectArchiveType(Obj);
+		EObjectArchiveType ObjectArchiveType = FXD_WriteArchiveHelper::GetObjectArchiveType(Obj);
 		*this << ObjectArchiveType;
 
 		switch (ObjectArchiveType)
@@ -154,7 +154,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 			Actor->Serialize(*this);
 
-			FARPG_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
+			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
 		}
 		return *this;
 		case EObjectArchiveType::DynamicActor:
@@ -196,7 +196,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 			Actor->Serialize(*this);
 
-			FARPG_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
+			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
 		}
 		return *this;
 		case EObjectArchiveType::InPackageComponent:

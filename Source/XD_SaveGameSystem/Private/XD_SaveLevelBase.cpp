@@ -31,8 +31,6 @@ bool UXD_SaveLevelBase::SaveLevel(ULevel* OuterLevel)
 
 			if (Result)
 			{
-				//SaveGameSystem_Display_Log("\n保存关卡[%s]成功\n保存的Object列表：%s", *UARPG_FunctionLibrary::GetLevelName(OuterLevel), *SavedObjectsDesc);
-
 				SaveGameSystem_Display_Log("--------------------------------------保存关卡[%s]成功--------------------------------------", *UXD_LevelFunctionLibrary::GetLevelName(OuterLevel));
 
 				SaveGameSystem_Display_Log("保存的Object列表：%s", *SavedObjectsDesc);
@@ -113,8 +111,8 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 				int LoadCount = 0;
 				while (LoadCount < SaveLevelBase->ActorRecorders.Num())
 				{
-					FXD_SaveGameRecorder& ARPG_Recorder = SaveLevelBase->ActorRecorders[LoadCount];
-					UXD_SaveGameFunctionLibrary::DeserializeObject(ARPG_Recorder, Level.Get(), ObjectReferenceCollection, SaveLevelBase->OldWorldOrigin);
+					FXD_SaveGameRecorder& XD_Recorder = SaveLevelBase->ActorRecorders[LoadCount];
+					UXD_SaveGameFunctionLibrary::DeserializeObject(XD_Recorder, Level.Get(), ObjectReferenceCollection, SaveLevelBase->OldWorldOrigin);
 
 					++LoadCount;
 

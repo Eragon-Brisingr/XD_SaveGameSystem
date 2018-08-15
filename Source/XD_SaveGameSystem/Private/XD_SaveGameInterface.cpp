@@ -2,6 +2,7 @@
 
 #include "XD_SaveGameInterface.h"
 #include "XD_SaveGameSystemUtility.h"
+#include "XD_DebugFunctionLibrary.h"
 
 
 // Add default functionality here for any IXD_SaveGameInterface functions that are not pure virtual.
@@ -18,7 +19,7 @@ void IXD_SaveGameInterface::GameInit(UObject* Object)
 
 	if (ChachWhenGameInitIsOverride == WhenGameInitIsOverride)
 	{
-		//SaveGameSystem_Display_Log("初始化%s", *UARPG_DebugFunctionLibrary::GetObjectDebugName(Object));
+		SaveGameSystem_Display_Log("初始化%s", *UXD_DebugFunctionLibrary::GetDebugName(Object));
 		WhenGameInitIsOverride -= 1;
 	}
 }

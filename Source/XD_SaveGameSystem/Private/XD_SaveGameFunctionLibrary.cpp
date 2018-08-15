@@ -15,28 +15,28 @@ FXD_SaveGameRecorder UXD_SaveGameFunctionLibrary::SerializeObject(UObject* Objec
 
 	FBufferArchive BufferArchive;
 
-	FXD_WriteArchive ARPG_WriteArchive(BufferArchive, Level, ReferenceCollection);
-	ARPG_WriteArchive << Object;
+	FXD_WriteArchive XD_WriteArchive(BufferArchive, Level, ReferenceCollection);
+	XD_WriteArchive << Object;
 
 	return BufferArchive;
 }
 
-UObject* UXD_SaveGameFunctionLibrary::DeserializeObject(const FXD_SaveGameRecorder& ARPG_Recorder, ULevel* Level, TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin)
+UObject* UXD_SaveGameFunctionLibrary::DeserializeObject(const FXD_SaveGameRecorder& XD_Recorder, ULevel* Level, TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin)
 {
-	FMemoryReader MemoryReader(ARPG_Recorder.Data);
+	FMemoryReader MemoryReader(XD_Recorder.Data);
 
-	FXD_ReadArchive ARPG_ReadArchive(MemoryReader, Level, ReferenceCollection, OldWorldOrigin);
+	FXD_ReadArchive XD_ReadArchive(MemoryReader, Level, ReferenceCollection, OldWorldOrigin);
 	UObject* Object = nullptr;
-	ARPG_ReadArchive << Object;
+	XD_ReadArchive << Object;
 	return Object;
 }
 
-UObject* UXD_SaveGameFunctionLibrary::DeserializeExistObject(const FXD_SaveGameRecorder& ARPG_Recorder, UObject* Object, ULevel* Level, TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin)
+UObject* UXD_SaveGameFunctionLibrary::DeserializeExistObject(const FXD_SaveGameRecorder& XD_Recorder, UObject* Object, ULevel* Level, TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin)
 {
-	FMemoryReader MemoryReader(ARPG_Recorder.Data);
+	FMemoryReader MemoryReader(XD_Recorder.Data);
 
-	FXD_ReadArchive ARPG_ReadArchive(MemoryReader, Level, ReferenceCollection, OldWorldOrigin);
-	ARPG_ReadArchive << Object;
+	FXD_ReadArchive XD_ReadArchive(MemoryReader, Level, ReferenceCollection, OldWorldOrigin);
+	XD_ReadArchive << Object;
 	return Object;
 }
 
