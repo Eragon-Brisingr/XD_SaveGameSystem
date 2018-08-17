@@ -33,9 +33,8 @@ UXD_SaveGameSystemBase* UXD_SaveGameSystemBase::Get(const UObject* WorldContextO
 	else
 	{
 		SaveGameSystem_Warning_LOG("GameInstance尚未实现XD_SaveGame_GameInstanceInterface的GetSaveGameSystem");
+		return UXD_SaveGameSystemBase::StaticClass()->GetDefaultObject<UXD_SaveGameSystemBase>();
 	}
-
-	return nullptr;
 }
 
 FString UXD_SaveGameSystemBase::MakeFullSlotName(FString SlotCategory, FString SlotName) const
