@@ -14,7 +14,7 @@ class UXD_SaveGameInterface : public UInterface
 };
 
 /**
- * 
+ * 实现该接口的Actor和Component会获得自动存档的能力，其被标记为SaveGame的属性也会被保存，Actor的Owner为该Actor或者Object的Outer为该Actor也会被保存
  */
 class XD_SAVEGAMESYSTEM_API IXD_SaveGameInterface
 {
@@ -36,4 +36,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenLoad();
 	virtual void WhenLoad_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
+	void WhenSave();
+	virtual void WhenSave_Implementation(){}
 };

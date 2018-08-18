@@ -88,6 +88,15 @@ void UXD_SaveGameSystemBase::StopAutoSave(UObject* WorldContextObject)
 	}
 }
 
+bool UXD_SaveGameSystemBase::IsAutoSaveWorld(UObject* WorldContextObject)
+{
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(WorldContextObject->GetWorld()->PersistentLevel)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	{
+		return WorldSettingsComponent->bActiveAutoSave;
+	}
+	return false;
+}
+
 void UXD_SaveGameSystemBase::LoadGame(UObject* WorldContextObject)
 {
 	StopAutoSave(WorldContextObject);
@@ -360,6 +369,7 @@ void UXD_SaveGameSystemBase::RegisterAutoSavePlayer(class APawn* Pawn)
 		AutoSavePlayerLamdba->SetFlags(RF_StrongRefOnFrame);
 		AutoSavePlayerLamdba->PlayerContoller = PlayerController;
 		AutoSavePlayerLamdba->PlayerState = PlayerController->PlayerState;
+		SaveGameSystem_Display_Log("玩家[%s]登记为自动保存", *PlayerController->PlayerState->GetPlayerName());
 		Pawn->OnEndPlay.AddDynamic(AutoSavePlayerLamdba, &UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame);
 	}
 }
@@ -371,6 +381,9 @@ void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason
 	if (PlayerContoller)
 	{
 		SaveGameSystem_Display_Log("玩家[%s]登出", *PlayerState->GetPlayerName());
-		UXD_SaveGameSystemBase::Get(PlayerContoller)->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
+		if (UXD_SaveGameSystemBase::IsAutoSaveWorld(Actor))
+		{
+			UXD_SaveGameSystemBase::Get(PlayerContoller)->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
+		}
 	}
 }

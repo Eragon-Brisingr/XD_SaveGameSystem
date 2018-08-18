@@ -22,6 +22,9 @@ public:
 	FXD_SaveGameRecorder PlayerControllerData;
 
 	UPROPERTY(BlueprintReadWrite, Category = "存档")
+	FRotator PlayerControllerRotation;
+
+	UPROPERTY(BlueprintReadWrite, Category = "存档")
 	FIntVector OldWorldOrigin;
 
 public:

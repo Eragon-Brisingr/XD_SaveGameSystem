@@ -69,6 +69,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 				Ar.ObjectReferenceCollection.Add(Component);
 
+				IXD_SaveGameInterface::Execute_WhenSave(Component);
 				Component->Serialize(Ar);
 			}
 		}
@@ -152,6 +153,10 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 			*this << ActorTransForm;
 
+			if (Actor->Implements<UXD_SaveGameInterface>())
+			{
+				IXD_SaveGameInterface::Execute_WhenSave(Actor);
+			}
 			Actor->Serialize(*this);
 
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
@@ -194,6 +199,10 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				*this << NullOwner;
 			}
 
+			if (Actor->Implements<UXD_SaveGameInterface>())
+			{
+				IXD_SaveGameInterface::Execute_WhenSave(Actor);
+			}
 			Actor->Serialize(*this);
 
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);

@@ -65,6 +65,8 @@ private:
 	void ShutDownAutoSaveLoadSystem(class AGameModeBase* GameMode);
 
 	void StopAutoSave(UObject* WorldContextObject);
+
+	static bool IsAutoSaveWorld(UObject* WorldContextObject);
 private:
 	void LoadLevelOrInitLevel(ULevel* Level, const bool SplitFrameLoadOrInitActors);
 

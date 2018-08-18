@@ -30,6 +30,7 @@ bool UXD_SavePlayerBase::SavePlayer_Implementation(APlayerController* PlayerCont
 	PlayerControllerData = UXD_SaveGameFunctionLibrary::SerializeObject(PlayerController, PlayerController->GetLevel(), ReferenceCollection);
 	PlayerCharacterData = UXD_SaveGameFunctionLibrary::SerializeObject(Pawn, Pawn->GetLevel(), ReferenceCollection);
 	OldWorldOrigin = UGameplayStatics::GetWorldOriginLocation(Pawn);
+	PlayerControllerRotation = PlayerController->GetControlRotation();
 
 	FString PlayerSaveSlotName = GetPlayerSaveSlotName(PlayerState);
 
@@ -48,6 +49,11 @@ class APawn* UXD_SavePlayerBase::LoadPlayer_Implementation(APlayerController* Pl
 	UXD_SaveGameFunctionLibrary::DeserializeExistObject(PlayerControllerData, PlayerController, PlayerController->GetLevel(), ReferenceCollection, OldWorldOrigin);
 	APawn* PlayerCharacter = CastChecked<APawn>(UXD_SaveGameFunctionLibrary::DeserializeObject(PlayerCharacterData, PlayerController->GetLevel(), ReferenceCollection, OldWorldOrigin));
 	PlayerController->Possess(PlayerCharacter);
+
+	PlayerController->GetWorld()->GetTimerManager().SetTimerForNextTick([=]
+	{
+		PlayerController->SetControlRotation(PlayerControllerRotation);
+	});
 
 	SaveGameSystem_Display_Log("读取玩家[%s]，角色%s，控制器%s", *GetPlayerSaveSlotName(PlayerController->PlayerState), *UXD_DebugFunctionLibrary::GetDebugName(PlayerCharacter), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
 
