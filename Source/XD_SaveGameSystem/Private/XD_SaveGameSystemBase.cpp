@@ -349,16 +349,16 @@ bool UXD_SaveGameSystemBase::SaveAllPlayer(const UObject* WorldContextObject)
 
 APawn* UXD_SaveGameSystemBase::TryLoadPlayer(class APlayerController* Player)
 {
-	FString SlotName = GetDefault<UXD_SavePlayerBase>(SavePlayerClass)->GetFullPlayerSlotName(Player->PlayerState);
-	if (UXD_SavePlayerBase* SavePlayerObject = Cast<UXD_SavePlayerBase>(UGameplayStatics::LoadGameFromSlot(SlotName, UserIndex)))
+	if (bInvokeLoadGame)
 	{
-		APawn* Pawn = SavePlayerObject->LoadPlayer(Player);
-		return Pawn;
+		FString SlotName = GetDefault<UXD_SavePlayerBase>(SavePlayerClass)->GetFullPlayerSlotName(Player->PlayerState);
+		if (UXD_SavePlayerBase* SavePlayerObject = Cast<UXD_SavePlayerBase>(UGameplayStatics::LoadGameFromSlot(SlotName, UserIndex)))
+		{
+			APawn* Pawn = SavePlayerObject->LoadPlayer(Player);
+			return Pawn;
+		}
 	}
-	else
-	{
-		return nullptr;
-	}
+	return nullptr;
 }
 
 void UXD_SaveGameSystemBase::RegisterAutoSavePlayer(class APawn* Pawn)
