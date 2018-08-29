@@ -166,7 +166,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 					{
 						if (AActor* Actor = InvokeToInitActors[InitCount].Get())
 						{
-							IXD_SaveGameInterface::GameInit(Actor);
+							UXD_SaveGameSystemBase::NotifyActorAndComponentInit(Actor);
 						}
 						++InitCount;
 
@@ -212,7 +212,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 			{
 				if (Actor && Actor->Implements<UXD_SaveGameInterface>())
 				{
-					IXD_SaveGameInterface::GameInit(Actor);
+					NotifyActorAndComponentInit(Actor);
 				}
 			}
 			EndInitLevel(Level);
@@ -236,9 +236,21 @@ void UXD_SaveGameSystemBase::WhenActorSpawnInitActor(UWorld* World)
 	{
 		if (bShouldInitSpawnActor && Actor->Implements<UXD_SaveGameInterface>())
 		{
-			IXD_SaveGameInterface::GameInit(Actor);
+			NotifyActorAndComponentInit(Actor);
 		}
 	}));
+}
+
+void UXD_SaveGameSystemBase::NotifyActorAndComponentInit(AActor* Actor)
+{
+	IXD_SaveGameInterface::GameInit(Actor);
+	for (UActorComponent* Component : Actor->GetComponents())
+	{
+		if (Component->Implements<UXD_SaveGameInterface>())
+		{
+			IXD_SaveGameInterface::GameInit(Component);
+		}
+	}
 }
 
 FString UXD_SaveGameSystemBase::MakeLevelSlotName(ULevel* Level)

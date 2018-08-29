@@ -72,6 +72,8 @@ private:
 
 	void WhenActorSpawnInitActor(UWorld* World);
 
+	static void NotifyActorAndComponentInit(AActor* Actor);
+
 	static FString MakeLevelSlotName(ULevel* Level);
 
 	bool SaveLevel(ULevel* Level) const;
