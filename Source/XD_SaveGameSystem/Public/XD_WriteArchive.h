@@ -20,6 +20,8 @@ struct XD_SAVEGAMESYSTEM_API FXD_WriteArchive : public FXD_ProxyArchiveBase
 		SetIsPersistent(false);
 	}
 
+	TWeakObjectPtr<class AActor> TopActor;
+
 	TWeakObjectPtr<class ULevel> Level;
 
 	TArray<UObject*>& ObjectReferenceCollection;
@@ -29,4 +31,6 @@ struct XD_SAVEGAMESYSTEM_API FXD_WriteArchive : public FXD_ProxyArchiveBase
 	virtual FArchive& operator<<(class UObject*& Obj) override;
 
 	void CheckActorError(AActor* Actor);
+
+	void CheckDynamicObjectError(const UObject* Object) const;
 };

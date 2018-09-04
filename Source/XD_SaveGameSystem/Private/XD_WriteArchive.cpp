@@ -113,6 +113,8 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			FString ObjectName = Obj->GetName();
 			*this << ObjectName;
 
+			CheckDynamicObjectError(Obj);
+
 			//先保存Outer
 			UObject* Outer = Obj->GetOuter();
 			if (Outer != GetTransientPackage())
@@ -229,5 +231,23 @@ void FXD_WriteArchive::CheckActorError(AActor* Actor)
 	if (ensure(Actor->GetLevel() == Level.Get()) == false)
 	{
 		SaveGameSystem_Error_Log("存档系统将保存关卡[%s]之外的Actor%s，应属于关卡[%s]，存档系统反序列化可能出现问题", *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetLevel()));
+	}
+
+	TopActor = Actor;
+}
+
+void FXD_WriteArchive::CheckDynamicObjectError(const UObject* Object) const
+{
+	if (TopActor.IsValid())
+	{
+		for (UObject* NextOuter = Object->GetOuter(); NextOuter != NULL; NextOuter = NextOuter->GetOuter())
+		{
+			if (TopActor == NextOuter)
+			{
+				return;
+			}
+		}
+
+		SaveGameSystem_Error_Log("%s的Outer链中不存在%s的Actor，请使用SoftObjectPtr代替直接引用", *UXD_DebugFunctionLibrary::GetDebugName(Object), *UXD_DebugFunctionLibrary::GetDebugName(TopActor.Get()));
 	}
 }
