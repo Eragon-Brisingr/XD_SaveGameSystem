@@ -28,7 +28,7 @@ public:
 
 	static void GameInit(UObject* Object);
 
-	//只有Actor会调用
+	//只有Actor与Component会调用
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenGameInit();
 	virtual void WhenGameInit_Implementation();
