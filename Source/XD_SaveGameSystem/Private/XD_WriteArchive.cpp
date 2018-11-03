@@ -113,7 +113,9 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			FString ObjectName = Obj->GetName();
 			*this << ObjectName;
 
+#if WITH_EDITOR
 			CheckDynamicObjectError(Obj);
+#endif
 
 			//先保存Outer
 			UObject* Outer = Obj->GetOuter();
@@ -145,7 +147,10 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		{
 			AActor* Actor = CastChecked<AActor>(Obj);
 
+#if WITH_EDITOR
 			CheckActorError(Actor);
+			TopActor.Push(Actor);
+#endif
 
 			FString ClassPath = Actor->GetClass()->GetPathName();
 			*this << ClassPath;
@@ -162,13 +167,20 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			Actor->Serialize(*this);
 
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
+
+#if WITH_EDITOR
+			TopActor.Pop();
+#endif
 		}
 		return *this;
 		case EObjectArchiveType::DynamicActor:
 		{
 			AActor* Actor = CastChecked<AActor>(Obj);
 
+#if WITH_EDITOR
 			CheckActorError(Actor);
+			TopActor.Push(Actor);
+#endif
 
 			FString ClassPath = Actor->GetClass()->GetPathName();
 			*this << ClassPath;
@@ -208,6 +220,10 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			Actor->Serialize(*this);
 
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
+
+#if WITH_EDITOR
+			TopActor.Pop();
+#endif
 		}
 		return *this;
 		case EObjectArchiveType::InPackageComponent:
@@ -226,28 +242,30 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 	}
 }
 
+#if WITH_EDITOR
 void FXD_WriteArchive::CheckActorError(AActor* Actor)
 {
 	if (ensure(Actor->GetLevel() == Level.Get()) == false)
 	{
 		SaveGameSystem_Error_Log("存档系统将保存关卡[%s]之外的Actor%s，应属于关卡[%s]，存档系统反序列化可能出现问题", *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetLevel()));
 	}
-
-	TopActor = Actor;
 }
 
 void FXD_WriteArchive::CheckDynamicObjectError(const UObject* Object) const
 {
-	if (TopActor.IsValid())
+	if (TopActor.Num() > 0)
 	{
-		for (UObject* NextOuter = Object->GetOuter(); NextOuter != NULL; NextOuter = NextOuter->GetOuter())
+		if (AActor* MainActor = TopActor.Top().Get())
 		{
-			if (TopActor == NextOuter)
+			for (UObject* NextOuter = Object->GetOuter(); NextOuter != NULL; NextOuter = NextOuter->GetOuter())
 			{
-				return;
+				if (MainActor == NextOuter)
+				{
+					return;
+				}
 			}
+			SaveGameSystem_Error_Log("%s的Outer链中不存在%s的Actor，请使用SoftObjectPtr代替直接引用", *UXD_DebugFunctionLibrary::GetDebugName(Object), *UXD_DebugFunctionLibrary::GetDebugName(MainActor));
 		}
-
-		SaveGameSystem_Error_Log("%s的Outer链中不存在%s的Actor，请使用SoftObjectPtr代替直接引用", *UXD_DebugFunctionLibrary::GetDebugName(Object), *UXD_DebugFunctionLibrary::GetDebugName(TopActor.Get()));
 	}
 }
+#endif
