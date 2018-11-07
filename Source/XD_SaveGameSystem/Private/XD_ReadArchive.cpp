@@ -163,7 +163,12 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				ActorSpawnParameters.OverrideLevel = Level.Get();
 				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-				findActor = Level->GetWorld()->SpawnActor<AActor>(ConstructorHelpersInternal::FindOrLoadClass(ClassPath, UObject::StaticClass()));
+				UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(Level.Get());
+				SaveGameSystem->StartSpawnActorWithoutInit();
+				{
+					findActor = Level->GetWorld()->SpawnActor<AActor>(ConstructorHelpersInternal::FindOrLoadClass(ClassPath, UObject::StaticClass()));
+				}
+				SaveGameSystem->EndSpawnActorWithoutInit();
 
 				findActor->Destroy();
 			}

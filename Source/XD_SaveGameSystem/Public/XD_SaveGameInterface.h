@@ -25,14 +25,13 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "游戏|存档")
 	bool NeedNotSave() const;
 	virtual bool NeedNotSave_Implementation() const;
-
-	static void GameInit(UObject* Object);
+	static bool NeedNotSave(UObject* Obj) { return IXD_SaveGameInterface::Execute_NeedNotSave(Obj); }
 
 	//只有Actor与Component会调用
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenGameInit();
 	virtual void WhenGameInit_Implementation();
-	static void WhenGameInit(UObject* Obj){ IXD_SaveGameInterface::Execute_WhenGameInit(Obj); }
+	static void GameInit(UObject* Obj);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenPostLoad();

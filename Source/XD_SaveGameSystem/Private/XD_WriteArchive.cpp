@@ -53,7 +53,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			TArray<UActorComponent*> NeedSaveComponents;
 			for (UActorComponent* Component : Actor->GetComponents())
 			{
-				if (Component->Implements<UXD_SaveGameInterface>() && IXD_SaveGameInterface::Execute_NeedNotSave(Component) == false)
+				if (Component->Implements<UXD_SaveGameInterface>() && IXD_SaveGameInterface::NeedNotSave(Component) == false)
 				{
 					NeedSaveComponents.Add(Component);
 				}
