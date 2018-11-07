@@ -15,7 +15,7 @@ void IXD_SaveGameInterface::GameInit(UObject* Object)
 	WhenGameInitIsOverride += 1;
 	int32 ChachWhenGameInitIsOverride = WhenGameInitIsOverride;
 
-	IXD_SaveGameInterface::Execute_WhenGameInit(Object);
+	IXD_SaveGameInterface::WhenGameInit(Object);
 
 	if (ChachWhenGameInitIsOverride == WhenGameInitIsOverride)
 	{
@@ -41,7 +41,7 @@ bool IXD_SaveGameInterface::NeedNotSave_Implementation() const
 	}
 }
 
-void IXD_SaveGameInterface::WhenLoad_Implementation()
+void IXD_SaveGameInterface::WhenPostLoad_Implementation()
 {
 
 }

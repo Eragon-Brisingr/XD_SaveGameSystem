@@ -37,7 +37,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 					if (Component->Implements<UXD_SaveGameInterface>())
 					{
-						IXD_SaveGameInterface::Execute_WhenLoad(Component);
+						IXD_SaveGameInterface::WhenPostLoad(Component);
 					}
 				}
 			}
@@ -270,10 +270,10 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 	}
 	Obj = ObjectReferenceCollection[ObjectIndex];
 
-	//最后呼叫WhenLoad
+	//最后呼叫WhenPostLoad
 	if (Obj && Obj->Implements<UXD_SaveGameInterface>())
 	{
-		IXD_SaveGameInterface::Execute_WhenLoad(Obj);
+		IXD_SaveGameInterface::WhenPostLoad(Obj);
 	}
 
 	return *this;

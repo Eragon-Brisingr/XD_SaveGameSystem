@@ -32,12 +32,16 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenGameInit();
 	virtual void WhenGameInit_Implementation();
+	static void WhenGameInit(UObject* Obj){ IXD_SaveGameInterface::Execute_WhenGameInit(Obj); }
 
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
-	void WhenLoad();
-	virtual void WhenLoad_Implementation();
+	void WhenPostLoad();
+	virtual void WhenPostLoad_Implementation();
+	static void WhenPostLoad(UObject* Obj) { IXD_SaveGameInterface::Execute_WhenPostLoad(Obj); }
 
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
-	void WhenSave();
-	virtual void WhenSave_Implementation(){}
+	void WhenPreSave();
+	virtual void WhenPreSave_Implementation(){}
+	static void WhenPreSave(UObject* Obj) { IXD_SaveGameInterface::Execute_WhenPreSave(Obj); }
+
 };

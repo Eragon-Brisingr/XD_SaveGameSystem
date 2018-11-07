@@ -69,7 +69,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 				Ar.ObjectReferenceCollection.Add(Component);
 
-				IXD_SaveGameInterface::Execute_WhenSave(Component);
+				IXD_SaveGameInterface::WhenPreSave(Component);
 				Component->Serialize(Ar);
 			}
 		}
@@ -162,7 +162,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 			if (Actor->Implements<UXD_SaveGameInterface>())
 			{
-				IXD_SaveGameInterface::Execute_WhenSave(Actor);
+				IXD_SaveGameInterface::WhenPreSave(Actor);
 			}
 			Actor->Serialize(*this);
 
@@ -215,7 +215,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 			if (Actor->Implements<UXD_SaveGameInterface>())
 			{
-				IXD_SaveGameInterface::Execute_WhenSave(Actor);
+				IXD_SaveGameInterface::WhenPreSave(Actor);
 			}
 			Actor->Serialize(*this);
 
