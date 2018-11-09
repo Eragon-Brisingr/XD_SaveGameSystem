@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include <ArchiveProxy.h>
+#include "XD_ProxyArchiveBase.generated.h"
 
 /**
  * 
@@ -28,6 +29,47 @@ enum class EObjectArchiveType : uint8
 	DynamicComponent
 };
 
+USTRUCT()
+struct XD_SAVEGAMESYSTEM_API FXD_AssetSaveData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(SaveGame)
+	FString Path;
+};
+
+USTRUCT()
+struct XD_SAVEGAMESYSTEM_API FXD_InPackageSaveData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(SaveGame)
+	FString Path;
+
+	UPROPERTY(SaveGame)
+	FString ClassPath;
+};
+
+USTRUCT()
+struct XD_SAVEGAMESYSTEM_API FXD_DynamicSaveData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(SaveGame)
+	FString Name;
+
+	UPROPERTY(SaveGame)
+	FString ClassPath;
+};
+
+USTRUCT()
+struct XD_SAVEGAMESYSTEM_API FXD_ActorExtraSaveData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(SaveGame)
+	FTransform Transform;
+};
 
 struct XD_SAVEGAMESYSTEM_API FXD_ProxyArchiveBase : public FArchiveProxy
 {

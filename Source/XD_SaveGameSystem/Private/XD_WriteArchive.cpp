@@ -62,10 +62,10 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			Ar << ComponentNumber;
 			for (UActorComponent* Component : NeedSaveComponents)
 			{
-				FString ComponentClassPath = Component->GetClass()->GetPathName();
-				Ar << ComponentClassPath;
-				FString ComponentName = Component->GetName();
-				Ar << ComponentName;
+				FXD_DynamicSaveData DynamicSaveData;
+				DynamicSaveData.ClassPath = Component->GetClass()->GetPathName();
+				DynamicSaveData.Name = Component->GetName();
+				FXD_DynamicSaveData::StaticStruct()->SerializeBin(Ar, &DynamicSaveData);
 
 				Ar.ObjectReferenceCollection.Add(Component);
 
@@ -91,27 +91,29 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			return *this;
 		case EObjectArchiveType::Asset:
 		{
-			FString AssetPath = Obj->GetPathName();
-			*this << AssetPath;
+			FXD_AssetSaveData AssetSaveData;
+			AssetSaveData.Path = Obj->GetPathName();
+			FXD_AssetSaveData::StaticStruct()->SerializeBin(*this, &AssetSaveData);
 		}
 		return *this;
 		case EObjectArchiveType::InPackageObject:
 		{
 			check(Obj->IsA<UActorComponent>() == false);
 
-			FString ClassPath = Obj->GetClass()->GetPathName();
-			*this << ClassPath;
-			FString ObjectPath = Obj->GetPathName();
-			*this << ObjectPath;
+			FXD_InPackageSaveData InPackageSaveData;
+			InPackageSaveData.ClassPath = Obj->GetClass()->GetPathName();
+			InPackageSaveData.Path = Obj->GetPathName();
+			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
+
 			Obj->Serialize(*this);
 		}
 		return *this;
 		case EObjectArchiveType::DynamicObject:
 		{
-			FString ClassPath = Obj->GetClass()->GetPathName();
-			*this << ClassPath;
-			FString ObjectName = Obj->GetName();
-			*this << ObjectName;
+			FXD_DynamicSaveData DynamicSaveData;
+			DynamicSaveData.ClassPath = Obj->GetClass()->GetPathName();
+			DynamicSaveData.Name = Obj->GetName();
+			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
 
 #if WITH_EDITOR
 			CheckDynamicObjectError(Obj);
@@ -151,14 +153,14 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			CheckActorError(Actor);
 			TopActor.Push(Actor);
 #endif
+			FXD_InPackageSaveData InPackageSaveData;
+			InPackageSaveData.ClassPath = Actor->GetClass()->GetPathName();
+			InPackageSaveData.Path = Actor->GetPathName();
+			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
 
-			FString ClassPath = Actor->GetClass()->GetPathName();
-			*this << ClassPath;
-			FString ActorPath = Actor->GetPathName();
-			*this << ActorPath;
-			FTransform ActorTransForm = Actor->GetTransform();
-
-			*this << ActorTransForm;
+			FXD_ActorExtraSaveData ActorExtraSaveData;
+			ActorExtraSaveData.Transform = Actor->GetTransform();
+			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
 
 			if (Actor->Implements<UXD_SaveGameInterface>())
 			{
@@ -181,13 +183,14 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			CheckActorError(Actor);
 			TopActor.Push(Actor);
 #endif
+			FXD_DynamicSaveData DynamicSaveData;
+			DynamicSaveData.ClassPath = Actor->GetClass()->GetPathName();
+			DynamicSaveData.Name = Actor->GetName();
+			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
 
-			FString ClassPath = Actor->GetClass()->GetPathName();
-			*this << ClassPath;
-			FString ActorName = Actor->GetName();
-			*this << ActorName;
-			FTransform ActorTransForm = Actor->GetTransform();
-			*this << ActorTransForm;
+			FXD_ActorExtraSaveData ActorExtraSaveData;
+			ActorExtraSaveData.Transform = Actor->GetTransform();
+			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
 
 			//保存Owner
 			AActor* Owner = Actor->GetOwner();

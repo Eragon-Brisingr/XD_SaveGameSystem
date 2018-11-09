@@ -18,9 +18,11 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			Ar << ComponentNumber;
 			for (int i = 0; i < ComponentNumber; ++i)
 			{
-				FString ComponentClassPath;
-				FString ComponentName;
-				Ar << ComponentClassPath << ComponentName;
+				FXD_DynamicSaveData DynamicSaveData;
+				FXD_DynamicSaveData::StaticStruct()->SerializeBin(Ar, &DynamicSaveData);
+				FString& ComponentClassPath = DynamicSaveData.ClassPath;
+				FString& ComponentName = DynamicSaveData.Name;
+
 				if (UClass* ComponentClass = ConstructorHelpersInternal::FindOrLoadObject<UClass>(ComponentClassPath))
 				{
 					UActorComponent* Component = nullptr;
@@ -57,23 +59,22 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			break;
 		case EObjectArchiveType::Asset:
 		{
-			FString AssetPath;
-			*this << AssetPath;
-			UObject* Asset = ConstructorHelpersInternal::FindOrLoadObject<UObject>(AssetPath);
+			FXD_AssetSaveData AssetSaveData;
+			FXD_AssetSaveData::StaticStruct()->SerializeBin(*this, &AssetSaveData);
+			UObject* Asset = ConstructorHelpersInternal::FindOrLoadObject<UObject>(AssetSaveData.Path);
 			ObjectReferenceCollection.Add(Asset);
 
 			if (Asset == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取资源[%s]失败", *AssetPath);
+				SaveGameSystem_Error_Log("读取资源[%s]失败", *AssetSaveData.Path);
 			}
 		}
 		break;
 		case EObjectArchiveType::InPackageObject:
 		{
-			FString ClassPath;
-			*this << ClassPath;
-			FString ObjectPath;
-			*this << ObjectPath;
+			FXD_InPackageSaveData InPackageSaveData;
+			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
+			FString& ObjectPath = InPackageSaveData.Path;
 
 			UObject* findObject = ConstructorHelpersInternal::FindOrLoadObject<UObject>(ObjectPath);
 			ObjectReferenceCollection.Add(findObject);
@@ -82,7 +83,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			{
 				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到", *ObjectPath, *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()));
 
-				findObject = NewObject<UObject>(Level.Get(), ConstructorHelpersInternal::FindOrLoadClass(ClassPath, UObject::StaticClass()), *ObjectPath);
+				findObject = NewObject<UObject>(Level.Get(), ConstructorHelpersInternal::FindOrLoadClass(InPackageSaveData.ClassPath, UObject::StaticClass()), *ObjectPath);
 				findObject->MarkPendingKill();
 			}
 
@@ -90,19 +91,15 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			//未知原因被加到了根集上
 			findObject->RemoveFromRoot();
-
 		}
 		break;
 		case EObjectArchiveType::DynamicObject:
 		{
-			FString ClassPath;
-			*this << ClassPath;
-			FString ObjectName;
-			*this << ObjectName;
+			FXD_DynamicSaveData DynamicSaveData;
+			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
+			FString& ObjectName = DynamicSaveData.Name;
 
-			UClass* ObjectClass = ConstructorHelpersInternal::FindOrLoadClass(ClassPath, UObject::StaticClass());
-			UObject* Object = NewObject<UObject>(GetTransientPackage(), ObjectClass);
-			ObjectReferenceCollection.Add(Object);
+			UClass* ObjectClass = ConstructorHelpersInternal::FindOrLoadClass(DynamicSaveData.ClassPath, UObject::StaticClass());
 
 			int32 OuterIndex;
 			*this << OuterIndex;
@@ -123,32 +120,29 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				}
 			}
 
-			//假如存在同名Object，销毁
-			if (UObject* ExistingObject = StaticFindObject(ObjectClass, Outer, *ObjectName, true))
+			UObject* Object = StaticFindObject(ObjectClass, Outer, *ObjectName, true);
+			if (Object == nullptr)
 			{
-				//Dirty hack，Rename会找到这个Object，标记为RF_NewerVersionExists才不会找到
-				ExistingObject->SetFlags(RF_NewerVersionExists);
-				ExistingObject->MarkPendingKill();
+				Object = NewObject<UObject>(Outer, ObjectClass, *ObjectName);
 			}
-
-			Object->Rename(*ObjectName, Outer);
+			ObjectReferenceCollection.Add(Object);
 
 			Object->Serialize(*this);
-
 		}
 		break;
 		case EObjectArchiveType::InPackageActor:
 		{
-			FString ClassPath;
-			*this << ClassPath;
-			FString ActorPath;
-			*this << ActorPath;
+			FXD_InPackageSaveData InPackageSaveData;
+			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
+			FString& ClassPath = InPackageSaveData.ClassPath;
+			FString& ActorPath = InPackageSaveData.Path;
+
+			FXD_ActorExtraSaveData ActorExtraSaveData;
+			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
+			FTransform& ActorTransForm = ActorExtraSaveData.Transform;
 
 			AActor* findActor = ConstructorHelpersInternal::FindOrLoadObject<AActor>(ActorPath);
 			ObjectReferenceCollection.Add(findActor);
-
-			FTransform ActorTransForm;
-			*this << ActorTransForm;
 
 			ActorTransForm.SetLocation(UXD_LevelFunctionLibrary::GetFixedWorldLocation(Level.Get(), OldWorldOrigin, ActorTransForm.GetLocation()));
 
@@ -184,16 +178,17 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 		break;
 		case EObjectArchiveType::DynamicActor:
 		{
-			FString ClassPath;
-			*this << ClassPath;
-			FString ActorName;
-			*this << ActorName;
-			FTransform ActorTransForm;
-			*this << ActorTransForm;
+			FXD_DynamicSaveData DynamicSaveData;
+			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
+			const FString& ActorName = DynamicSaveData.Name;
+
+			FXD_ActorExtraSaveData ActorExtraSaveData;
+			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
+			FTransform& ActorTransForm = ActorExtraSaveData.Transform;
 
 			ActorTransForm.SetLocation(UXD_LevelFunctionLibrary::GetFixedWorldLocation(Level.Get(), OldWorldOrigin, ActorTransForm.GetLocation()));
 
-			UClass* ActorClass = ConstructorHelpersInternal::FindOrLoadClass(ClassPath, UObject::StaticClass());
+			UClass* ActorClass = ConstructorHelpersInternal::FindOrLoadClass(DynamicSaveData.ClassPath, UObject::StaticClass());
 
 			AActor* Actor = Cast<AActor>(Obj);
 			if (Actor == nullptr)
