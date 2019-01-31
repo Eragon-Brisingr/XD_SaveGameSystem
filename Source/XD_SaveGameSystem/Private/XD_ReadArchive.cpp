@@ -20,10 +20,9 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			{
 				FXD_DynamicSaveData DynamicSaveData;
 				FXD_DynamicSaveData::StaticStruct()->SerializeBin(Ar, &DynamicSaveData);
-				FString& ComponentClassPath = DynamicSaveData.ClassPath;
 				FString& ComponentName = DynamicSaveData.Name;
 
-				if (UClass* ComponentClass = ConstructorHelpersInternal::FindOrLoadObject<UClass>(ComponentClassPath))
+				if (UClass* ComponentClass = DynamicSaveData.ClassPath.LoadSynchronous())
 				{
 					UActorComponent* Component = nullptr;
 
@@ -61,12 +60,12 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 		{
 			FXD_AssetSaveData AssetSaveData;
 			FXD_AssetSaveData::StaticStruct()->SerializeBin(*this, &AssetSaveData);
-			UObject* Asset = ConstructorHelpersInternal::FindOrLoadObject<UObject>(AssetSaveData.Path);
+			UObject* Asset = AssetSaveData.Path.LoadSynchronous();
 			ObjectReferenceCollection.Add(Asset);
 
 			if (Asset == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取资源[%s]失败", *AssetSaveData.Path);
+				SaveGameSystem_Error_Log("读取资源[%s]失败，路径为[%s]", *AssetSaveData.Path.GetAssetName(), *AssetSaveData.Path.GetLongPackageName());
 			}
 		}
 		break;
@@ -74,16 +73,16 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 		{
 			FXD_InPackageSaveData InPackageSaveData;
 			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
-			FString& ObjectPath = InPackageSaveData.Path;
 
-			UObject* findObject = ConstructorHelpersInternal::FindOrLoadObject<UObject>(ObjectPath);
+			UObject* findObject = InPackageSaveData.Path.LoadSynchronous();
 			ObjectReferenceCollection.Add(findObject);
 
 			if (findObject == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到", *ObjectPath, *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()));
+				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到，原路径为[%s]", *InPackageSaveData.Path.GetAssetName(), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *InPackageSaveData.Path.GetLongPackageName());
 
-				findObject = NewObject<UObject>(Level.Get(), ConstructorHelpersInternal::FindOrLoadClass(InPackageSaveData.ClassPath, UObject::StaticClass()), *ObjectPath);
+				findObject = NewObject<UObject>(Level.Get(), InPackageSaveData.ClassPath.LoadSynchronous(), *InPackageSaveData.Path.GetAssetName());
+				findObject->ConditionalBeginDestroy();
 				findObject->MarkPendingKill();
 			}
 
@@ -99,7 +98,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
 			FString& ObjectName = DynamicSaveData.Name;
 
-			UClass* ObjectClass = ConstructorHelpersInternal::FindOrLoadClass(DynamicSaveData.ClassPath, UObject::StaticClass());
+			UClass* ObjectClass = DynamicSaveData.ClassPath.LoadSynchronous();
 
 			int32 OuterIndex;
 			*this << OuterIndex;
@@ -134,33 +133,30 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 		{
 			FXD_InPackageSaveData InPackageSaveData;
 			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
-			FString& ClassPath = InPackageSaveData.ClassPath;
-			FString& ActorPath = InPackageSaveData.Path;
+			TSoftClassPtr<UObject>& ClassPath = InPackageSaveData.ClassPath;
+			TSoftObjectPtr<UObject>& ActorPath = InPackageSaveData.Path;
 
 			FXD_ActorExtraSaveData ActorExtraSaveData;
 			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
 			FTransform& ActorTransForm = ActorExtraSaveData.Transform;
-
-			AActor* findActor = ConstructorHelpersInternal::FindOrLoadObject<AActor>(ActorPath);
-			ObjectReferenceCollection.Add(findActor);
-
 			ActorTransForm.SetLocation(UXD_LevelFunctionLibrary::GetFixedWorldLocation(Level.Get(), OldWorldOrigin, ActorTransForm.GetLocation()));
+
+			AActor* findActor = (AActor*)ActorPath.Get();
+			ObjectReferenceCollection.Add(findActor);
 
 			if (findActor == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到", *ActorPath, *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()));
+				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到，原路径为[%s]", *ActorPath.GetAssetName(), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *ActorPath.GetLongPackageName());
 
 				FActorSpawnParameters ActorSpawnParameters;
-				int32 NameStartIndex;
-				ActorPath.FindLastChar(TEXT('.'), NameStartIndex);
-				ActorSpawnParameters.Name = *ActorPath.Right(ActorPath.Len() - NameStartIndex - 1);
+				ActorSpawnParameters.Name = *ActorPath.GetAssetName();
 				ActorSpawnParameters.OverrideLevel = Level.Get();
 				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 				UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(Level.Get());
 				SaveGameSystem->StartSpawnActorWithoutInit();
 				{
-					findActor = Level->GetWorld()->SpawnActor<AActor>(ConstructorHelpersInternal::FindOrLoadClass(ClassPath, UObject::StaticClass()));
+					findActor = Level->GetWorld()->SpawnActor<AActor>(ClassPath.LoadSynchronous());
 				}
 				SaveGameSystem->EndSpawnActorWithoutInit();
 
@@ -188,7 +184,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			ActorTransForm.SetLocation(UXD_LevelFunctionLibrary::GetFixedWorldLocation(Level.Get(), OldWorldOrigin, ActorTransForm.GetLocation()));
 
-			UClass* ActorClass = ConstructorHelpersInternal::FindOrLoadClass(DynamicSaveData.ClassPath, UObject::StaticClass());
+			UClass* ActorClass = DynamicSaveData.ClassPath.LoadSynchronous();
 
 			AActor* Actor = Cast<AActor>(Obj);
 			if (Actor == nullptr)

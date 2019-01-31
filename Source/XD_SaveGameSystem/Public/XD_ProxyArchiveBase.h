@@ -35,7 +35,7 @@ struct XD_SAVEGAMESYSTEM_API FXD_AssetSaveData
 	GENERATED_BODY()
 public:
 	UPROPERTY(SaveGame)
-	FString Path;
+	TSoftObjectPtr<UObject> Path;
 };
 
 USTRUCT()
@@ -44,10 +44,10 @@ struct XD_SAVEGAMESYSTEM_API FXD_InPackageSaveData
 	GENERATED_BODY()
 public:
 	UPROPERTY(SaveGame)
-	FString Path;
+	TSoftObjectPtr<UObject> Path;
 
 	UPROPERTY(SaveGame)
-	FString ClassPath;
+	TSoftClassPtr<UObject> ClassPath;
 };
 
 USTRUCT()
@@ -59,7 +59,7 @@ public:
 	FString Name;
 
 	UPROPERTY(SaveGame)
-	FString ClassPath;
+	TSoftClassPtr<UObject> ClassPath;
 };
 
 USTRUCT()

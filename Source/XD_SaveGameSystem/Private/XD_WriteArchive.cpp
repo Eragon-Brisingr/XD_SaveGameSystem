@@ -63,7 +63,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			for (UActorComponent* Component : NeedSaveComponents)
 			{
 				FXD_DynamicSaveData DynamicSaveData;
-				DynamicSaveData.ClassPath = Component->GetClass()->GetPathName();
+				DynamicSaveData.ClassPath = Component->GetClass();
 				DynamicSaveData.Name = Component->GetName();
 				FXD_DynamicSaveData::StaticStruct()->SerializeBin(Ar, &DynamicSaveData);
 
@@ -92,7 +92,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		case EObjectArchiveType::Asset:
 		{
 			FXD_AssetSaveData AssetSaveData;
-			AssetSaveData.Path = Obj->GetPathName();
+			AssetSaveData.Path = Obj;
 			FXD_AssetSaveData::StaticStruct()->SerializeBin(*this, &AssetSaveData);
 		}
 		return *this;
@@ -101,8 +101,8 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			check(Obj->IsA<UActorComponent>() == false);
 
 			FXD_InPackageSaveData InPackageSaveData;
-			InPackageSaveData.ClassPath = Obj->GetClass()->GetPathName();
-			InPackageSaveData.Path = Obj->GetPathName();
+			InPackageSaveData.ClassPath = Obj->GetClass();
+			InPackageSaveData.Path = Obj;
 			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
 
 			Obj->Serialize(*this);
@@ -111,7 +111,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		case EObjectArchiveType::DynamicObject:
 		{
 			FXD_DynamicSaveData DynamicSaveData;
-			DynamicSaveData.ClassPath = Obj->GetClass()->GetPathName();
+			DynamicSaveData.ClassPath = Obj->GetClass();
 			DynamicSaveData.Name = Obj->GetName();
 			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
 
@@ -184,7 +184,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			TopActor.Push(Actor);
 #endif
 			FXD_DynamicSaveData DynamicSaveData;
-			DynamicSaveData.ClassPath = Actor->GetClass()->GetPathName();
+			DynamicSaveData.ClassPath = Actor->GetClass();
 			DynamicSaveData.Name = Actor->GetName();
 			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
 
