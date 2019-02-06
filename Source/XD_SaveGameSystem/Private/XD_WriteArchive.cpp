@@ -5,7 +5,6 @@
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_GameTypeEx.h"
 
-
 FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 {
 	struct FXD_WriteArchiveHelper
@@ -21,7 +20,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				}
 				else if (Obj->IsA<AActor>())
 				{
-					if (Obj->HasAnyFlags(RF_XD_WasLoaded))
+					if (Obj->HasAnyFlags(RF_InPackageFlags))
 					{
 						return EObjectArchiveType::InPackageActor;
 					}
@@ -32,7 +31,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				}
 				else
 				{
-					if (Obj->HasAnyFlags(RF_XD_WasLoaded))
+					if (Obj->HasAnyFlags(RF_InPackageFlags))
 					{
 						return EObjectArchiveType::InPackageObject;
 					}
