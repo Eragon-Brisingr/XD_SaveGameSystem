@@ -7,6 +7,13 @@
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_SaveGameSystemBase.h"
 
+template<typename T>
+FString GetSubObjectName(const TSoftObjectPtr<T>& SoftObjectPtr)
+{
+	FString SubObjectName;
+	SoftObjectPtr.GetUniqueID().GetSubPathString().Split(TEXT("."), nullptr, &SubObjectName, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
+	return SubObjectName;
+}
 
 FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 {
@@ -65,7 +72,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			if (Asset == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取资源[%s]失败，路径为[%s]", *AssetSaveData.Path.GetAssetName(), *AssetSaveData.Path.GetLongPackageName());
+				SaveGameSystem_Error_Log("读取资源[%s]失败，路径为[%s]", *GetSubObjectName(AssetSaveData.Path), *AssetSaveData.Path.GetLongPackageName());
 			}
 		}
 		break;
@@ -79,9 +86,9 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			if (findObject == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到，原路径为[%s]", *InPackageSaveData.Path.GetAssetName(), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *InPackageSaveData.Path.GetLongPackageName());
+				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(InPackageSaveData.Path), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *InPackageSaveData.Path.GetLongPackageName());
 
-				findObject = NewObject<UObject>(Level.Get(), InPackageSaveData.ClassPath.LoadSynchronous(), *InPackageSaveData.Path.GetAssetName());
+				findObject = NewObject<UObject>(Level.Get(), InPackageSaveData.ClassPath.LoadSynchronous(), *GetSubObjectName(InPackageSaveData.Path));
 				findObject->ConditionalBeginDestroy();
 				findObject->MarkPendingKill();
 			}
@@ -146,10 +153,10 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			if (findActor == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到，原路径为[%s]", *ActorPath.GetAssetName(), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *ActorPath.GetLongPackageName());
+				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(ActorPath), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *ActorPath.GetLongPackageName());
 
 				FActorSpawnParameters ActorSpawnParameters;
-				ActorSpawnParameters.Name = *ActorPath.GetAssetName();
+				ActorSpawnParameters.Name = *GetSubObjectName(ActorPath);
 				ActorSpawnParameters.OverrideLevel = Level.Get();
 				ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
