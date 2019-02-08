@@ -9,6 +9,18 @@
 /**
  * 
  */
+USTRUCT()
+struct XD_SAVEGAMESYSTEM_API FXD_SavePlayerData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(SaveGame)
+	APawn* Pawn;
+
+	UPROPERTY(SaveGame)
+	APlayerController* PlayerController;
+};
+
 UCLASS()
 class XD_SAVEGAMESYSTEM_API UXD_SavePlayerBase : public USaveGame
 {

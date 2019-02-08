@@ -18,6 +18,7 @@
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
 	:SaveLevelClass(UXD_SaveLevelBase::StaticClass()),
 	SavePlayerClass(UXD_SavePlayerBase::StaticClass()),
+	bEnableAutoSave(true),
 	bShouldInitSpawnActor(true)
 {
 
@@ -88,7 +89,7 @@ void UXD_SaveGameSystemBase::StopAutoSave(UObject* WorldContextObject)
 	}
 }
 
-bool UXD_SaveGameSystemBase::IsAutoSaveWorld(UObject* WorldContextObject)
+bool UXD_SaveGameSystemBase::IsAutoSaveLevel(UObject* WorldContextObject)
 {
 	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(WorldContextObject->GetWorld()->PersistentLevel)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
@@ -393,9 +394,11 @@ void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason
 	if (PlayerContoller)
 	{
 		SaveGameSystem_Display_Log("玩家[%s]登出", *PlayerState->GetPlayerName());
-		if (UXD_SaveGameSystemBase::IsAutoSaveWorld(Actor))
+
+		UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(PlayerContoller);
+		if (SaveGameSystem->bEnableAutoSave && UXD_SaveGameSystemBase::IsAutoSaveLevel(Actor))
 		{
-			UXD_SaveGameSystemBase::Get(PlayerContoller)->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
+			SaveGameSystem->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
 		}
 	}
 }

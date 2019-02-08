@@ -28,21 +28,24 @@ public:
 	
 	static UXD_SaveGameSystemBase* Get(const UObject* WorldContextObject);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
+	UPROPERTY(EditAnywhere, Category = "存档系统")
+	uint8 bEnableAutoSave : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	uint8 bInvokeLoadGame : 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	FString SaveGameFilePerfix = TEXT("SaveData1");
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	int32 UserIndex;
 
 	FString MakeFullSlotName(FString SlotCategory, FString SlotName) const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	TSubclassOf<class UXD_SaveLevelBase> SaveLevelClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "游戏|存档")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	TSubclassOf<class UXD_SavePlayerBase> SavePlayerClass;
 private:
 	//只有读取时Spawn的Actor不执行Init
@@ -66,7 +69,7 @@ private:
 
 	void StopAutoSave(UObject* WorldContextObject);
 
-	static bool IsAutoSaveWorld(UObject* WorldContextObject);
+	static bool IsAutoSaveLevel(UObject* WorldContextObject);
 private:
 	void LoadLevelOrInitLevel(ULevel* Level, const bool SplitFrameLoadOrInitActors);
 

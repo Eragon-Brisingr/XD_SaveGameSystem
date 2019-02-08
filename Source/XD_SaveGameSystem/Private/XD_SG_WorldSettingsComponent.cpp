@@ -27,7 +27,7 @@ void UXD_SG_WorldSettingsComponent::EndPlay(const EEndPlayReason::Type EndPlayRe
 		{
 			if (UXD_SaveGameSystemBase* SaveGameSystem = UXD_SaveGameSystemBase::Get(this))
 			{
-				if (SaveGameSystem->IsLevelInitCompleted(Level))
+				if (SaveGameSystem->bEnableAutoSave && SaveGameSystem->IsLevelInitCompleted(Level))
 				{
 					SaveGameSystem->SaveLevel(Level);
 				}
