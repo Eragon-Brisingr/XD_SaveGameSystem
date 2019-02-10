@@ -33,11 +33,13 @@ public:
 	virtual void WhenGameInit_Implementation();
 	static void GameInit(UObject* Obj);
 
+	//只有Actor与Component会调用
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenPostLoad();
 	virtual void WhenPostLoad_Implementation();
 	static void WhenPostLoad(UObject* Obj) { IXD_SaveGameInterface::Execute_WhenPostLoad(Obj); }
 
+	//只有Actor与Component会调用
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenPreSave();
 	virtual void WhenPreSave_Implementation(){}

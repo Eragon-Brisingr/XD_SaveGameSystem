@@ -23,10 +23,7 @@ enum class EObjectArchiveType : uint8
 	//在Package中的Actor
 	InPackageActor,
 	//运行中生成的Actor
-	DynamicActor,
-	//假如需要更细致的控制Component内的Object的引用，则需再实现这两个的分类
-	InPackageComponent,
-	DynamicComponent
+	DynamicActor
 };
 
 USTRUCT()

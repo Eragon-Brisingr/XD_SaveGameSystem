@@ -61,6 +61,10 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 				{
 					TimeLimit = TNumericLimits<double>::Max();
 				}
+				else
+				{
+					TimeLimit = UXD_SaveGameSystemBase::Get(Level)->SplitFrameLoadActorLimitSeconds;
+				}
 
 				SaveLevelBase->SetFlags(RF_StrongRefOnFrame);
 
@@ -84,7 +88,7 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 
 			bool IsNoSplitFrameLoadUse;
 
-			double TimeLimit = 0.005;
+			double TimeLimit;
 
 			TWeakObjectPtr<ULevel> Level;
 			TWeakObjectPtr<UXD_SaveLevelBase> SaveLevelBase;

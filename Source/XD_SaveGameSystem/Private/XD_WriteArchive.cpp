@@ -4,6 +4,7 @@
 #include "XD_DebugFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_GameTypeEx.h"
+#include "Components/ActorComponent.h"
 
 FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 {
@@ -20,6 +21,9 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				}
 				else if (Obj->IsA<AActor>())
 				{
+					// Component非本Actor不可持有引用
+					check(!Obj->IsA<UActorComponent>());
+
 					if (Obj->HasAnyFlags(RF_InPackageFlags))
 					{
 						return EObjectArchiveType::InPackageActor;
@@ -49,6 +53,12 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 		static void SerilizeActorSpecialInfo(FXD_WriteArchive& Ar, AActor* Actor)
 		{
+			if (Actor->Implements<UXD_SaveGameInterface>())
+			{
+				IXD_SaveGameInterface::WhenPreSave(Actor);
+			}
+			Actor->Serialize(Ar);
+
 			TArray<UActorComponent*> NeedSaveComponents;
 			for (UActorComponent* Component : Actor->GetComponents())
 			{
@@ -161,12 +171,6 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			ActorExtraSaveData.Transform = Actor->GetTransform();
 			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
 
-			if (Actor->Implements<UXD_SaveGameInterface>())
-			{
-				IXD_SaveGameInterface::WhenPreSave(Actor);
-			}
-			Actor->Serialize(*this);
-
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
 
 #if WITH_EDITOR
@@ -198,7 +202,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				int32 OwnerIndex = ObjectReferenceCollection.IndexOfByKey(Owner);
 				if (OwnerIndex == INDEX_NONE)
 				{
-					//下一个即为Owner
+					//设置下一个即为Owner
 					OwnerIndex = ObjectReferenceCollection.Num();
 					*this << OwnerIndex;
 
@@ -215,12 +219,6 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				*this << NullOwner;
 			}
 
-			if (Actor->Implements<UXD_SaveGameInterface>())
-			{
-				IXD_SaveGameInterface::WhenPreSave(Actor);
-			}
-			Actor->Serialize(*this);
-
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
 
 #if WITH_EDITOR
@@ -228,10 +226,6 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 #endif
 		}
 		return *this;
-		case EObjectArchiveType::InPackageComponent:
-			return *this;
-		case EObjectArchiveType::DynamicComponent:
-			return *this;
 		}
 
 

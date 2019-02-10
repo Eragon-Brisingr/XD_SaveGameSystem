@@ -47,6 +47,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	TSubclassOf<class UXD_SavePlayerBase> SavePlayerClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
+	float SplitFrameLoadActorLimitSeconds = 0.005f;
 private:
 	//只有读取时Spawn的Actor不执行Init
 	uint8 bShouldInitSpawnActor : 1;

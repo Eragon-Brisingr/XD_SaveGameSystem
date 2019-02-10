@@ -21,6 +21,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 	{
 		static void DeserilizeActorSpecialInfo(FXD_ReadArchive& Ar, AActor* Actor)
 		{
+			Actor->Serialize(Ar);
+
 			uint8 ComponentNumber;
 			Ar << ComponentNumber;
 			for (int i = 0; i < ComponentNumber; ++i)
@@ -48,6 +50,11 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 						IXD_SaveGameInterface::WhenPostLoad(Component);
 					}
 				}
+			}
+
+			if (Actor->Implements<UXD_SaveGameInterface>())
+			{
+				IXD_SaveGameInterface::WhenPostLoad(Actor);
 			}
 		}
 	};
@@ -171,7 +178,6 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			}
 
 			findActor->SetActorTransform(ActorTransForm, false, nullptr, ETeleportType::TeleportPhysics);
-			findActor->Serialize(*this);
 
 			FXD_ReadArchiveHelper::DeserilizeActorSpecialInfo(*this, findActor);
 
@@ -253,31 +259,13 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				}
 			}
 
-			Actor->Serialize(*this);
-
 			FXD_ReadArchiveHelper::DeserilizeActorSpecialInfo(*this, Actor);
-
-		}
-		break;
-		case EObjectArchiveType::InPackageComponent:
-		{
-
-		}
-		break;
-		case EObjectArchiveType::DynamicComponent:
-		{
 
 		}
 		break;
 		}
 	}
 	Obj = ObjectReferenceCollection[ObjectIndex];
-
-	//最后呼叫WhenPostLoad
-	if (Obj && Obj->Implements<UXD_SaveGameInterface>())
-	{
-		IXD_SaveGameInterface::WhenPostLoad(Obj);
-	}
 
 	return *this;
 
