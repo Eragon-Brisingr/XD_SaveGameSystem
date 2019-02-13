@@ -101,9 +101,6 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			}
 
 			findObject->Serialize(*this);
-
-			//未知原因被加到了根集上
-			findObject->RemoveFromRoot();
 		}
 		break;
 		case EObjectArchiveType::DynamicObject:
@@ -123,7 +120,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			}
 			else
 			{
-				if (OuterIndex >= ObjectReferenceCollection.Num())
+				//Index和当前数量相等表明后一个即为Outer
+				if (OuterIndex == ObjectReferenceCollection.Num())
 				{
 					*this << Outer;
 				}
@@ -158,8 +156,11 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			AActor* findActor = (AActor*)ActorPath.Get();
 			ObjectReferenceCollection.Add(findActor);
 
+			bool bIsInvalidActor = false;
 			if (findActor == nullptr)
 			{
+				bIsInvalidActor = true;
+
 				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(ActorPath), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *ActorPath.GetLongPackageName());
 
 				FActorSpawnParameters ActorSpawnParameters;
@@ -173,16 +174,16 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 					findActor = Level->GetWorld()->SpawnActor<AActor>(ClassPath.LoadSynchronous());
 				}
 				SaveGameSystem->EndSpawnActorWithoutInit();
-
-				findActor->Destroy();
 			}
 
 			findActor->SetActorTransform(ActorTransForm, false, nullptr, ETeleportType::TeleportPhysics);
 
 			FXD_ReadArchiveHelper::DeserilizeActorSpecialInfo(*this, findActor);
 
-			//未知原因被加到了根集上
-			findActor->RemoveFromRoot();
+			if (bIsInvalidActor)
+			{
+				findActor->Destroy();
+			}
 		}
 		break;
 		case EObjectArchiveType::DynamicActor:
@@ -216,7 +217,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				}
 				else
 				{
-					SaveGameSystem_Warning_LOG("提供反序列化的Actor%s类型[%s]与存档[%s]不匹配", *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetClass()), *UXD_DebugFunctionLibrary::GetDebugName(ActorClass));
+					SaveGameSystem_Warning_LOG("提供反序列化的Actor%s类型%s与存档%s不匹配", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetClass()), *UXD_DebugFunctionLibrary::GetDebugName(ActorClass));
 				}
 			}
 			else
@@ -239,7 +240,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			*this << OwnerIndex;
 			if (OwnerIndex != INDEX_NONE)
 			{
-				if (OwnerIndex >= ObjectReferenceCollection.Num())
+				//Index和当前数量相等表明后一个即为Owner
+				if (OwnerIndex == ObjectReferenceCollection.Num())
 				{
 					AActor* Owner;
 					*this << Owner;
@@ -249,18 +251,17 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				{
 					Actor->SetOwner(Cast<AActor>(ObjectReferenceCollection[OwnerIndex]));
 				}
-
-				if (Actor->GetOwner() == nullptr || Actor->GetOwner()->IsPendingKillPending())
-				{
-					//假如Owner没读取成功则销毁该Actor
-					SaveGameSystem_Warning_LOG("应Spawn的Actor%s在关卡%s中无法找到Owner，一般原因是Owner被删除", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Level.Get()));
-					Actor->Destroy();
-					ObjectReferenceCollection[AddIndex] = nullptr;
-				}
 			}
 
 			FXD_ReadArchiveHelper::DeserilizeActorSpecialInfo(*this, Actor);
 
+			//假如Owner没读取成功则销毁该Actor
+			if (Actor->GetOwner() == nullptr || Actor->GetOwner()->IsPendingKillPending())
+			{
+				SaveGameSystem_Warning_LOG("应Spawn的Actor%s在关卡%s中无法找到Owner，一般原因是Owner被删除", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Level.Get()));
+				Actor->Destroy();
+				ObjectReferenceCollection[AddIndex] = nullptr;
+			}
 		}
 		break;
 		}
