@@ -256,11 +256,14 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			FXD_ReadArchiveHelper::DeserilizeActorSpecialInfo(*this, Actor);
 
 			//假如Owner没读取成功则销毁该Actor
-			if (Actor->GetOwner() == nullptr || Actor->GetOwner()->IsPendingKillPending())
+			if (OwnerIndex != INDEX_NONE)
 			{
-				SaveGameSystem_Warning_LOG("应Spawn的Actor%s在关卡%s中无法找到Owner，一般原因是Owner被删除", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Level.Get()));
-				Actor->Destroy();
-				ObjectReferenceCollection[AddIndex] = nullptr;
+				if (Actor->GetOwner() == nullptr || Actor->GetOwner()->IsPendingKillPending())
+				{
+					SaveGameSystem_Warning_LOG("应Spawn的Actor%s在关卡%s中无法找到Owner，一般原因是Owner被删除", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Level.Get()));
+					Actor->Destroy();
+					ObjectReferenceCollection[AddIndex] = nullptr;
+				}
 			}
 		}
 		break;
