@@ -238,7 +238,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			int32 OwnerIndex;
 			*this << OwnerIndex;
-			if (OwnerIndex != INDEX_NONE)
+			bool bHasOwner = OwnerIndex != INDEX_NONE;
+			if (bHasOwner)
 			{
 				//Index和当前数量相等表明后一个即为Owner
 				if (OwnerIndex == ObjectReferenceCollection.Num())
@@ -256,7 +257,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			FXD_ReadArchiveHelper::DeserilizeActorSpecialInfo(*this, Actor);
 
 			//假如Owner没读取成功则销毁该Actor
-			if (OwnerIndex != INDEX_NONE)
+			if (bHasOwner)
 			{
 				if (Actor->GetOwner() == nullptr || Actor->GetOwner()->IsPendingKillPending())
 				{
