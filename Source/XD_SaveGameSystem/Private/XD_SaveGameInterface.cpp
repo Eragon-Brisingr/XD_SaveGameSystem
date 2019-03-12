@@ -29,15 +29,15 @@ void IXD_SaveGameInterface::WhenGameInit_Implementation()
 	WhenGameInitIsOverride -= 1;
 }
 
-bool IXD_SaveGameInterface::NeedNotSave_Implementation() const
+bool IXD_SaveGameInterface::NeedSave_Implementation() const
 {
 	if (const AActor* Actor = Cast<AActor>(this))
 	{
-		return Actor->GetOwner() ? true : false;
+		return Actor->GetOwner() ? false : true;
 	}
 	else
 	{
-		return false;
+		return true;
 	}
 }
 

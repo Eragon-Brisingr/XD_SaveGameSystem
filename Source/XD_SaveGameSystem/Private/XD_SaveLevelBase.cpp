@@ -13,7 +13,7 @@ bool UXD_SaveLevelBase::SaveLevel(ULevel* OuterLevel)
 
 		for (AActor* Actor : OuterLevel->Actors)
 		{
-			if (Actor && Actor->Implements<UXD_SaveGameInterface>() && !IXD_SaveGameInterface::NeedNotSave(Actor))
+			if (Actor && Actor->Implements<UXD_SaveGameInterface>() && !IXD_SaveGameInterface::NeedSave(Actor))
 			{
 				ActorRecorders.Add(UXD_SaveGameFunctionLibrary::SerializeObject(Actor, OuterLevel, ObjectReferenceCollection));
 			}
@@ -71,7 +71,7 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 				//记录下需要被读取的Actor
 				for (AActor* Actor : Level->Actors)
 				{
-					if (Actor && Actor->Implements<UXD_SaveGameInterface>() && IXD_SaveGameInterface::NeedNotSave(Actor) == false)
+					if (Actor && Actor->Implements<UXD_SaveGameInterface>() && IXD_SaveGameInterface::NeedSave(Actor))
 					{
 						NeedBeLoadActors.Add(Actor);
 					}

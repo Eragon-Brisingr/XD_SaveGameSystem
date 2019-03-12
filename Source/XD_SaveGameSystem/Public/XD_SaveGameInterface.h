@@ -23,9 +23,9 @@ class XD_SAVEGAMESYSTEM_API IXD_SaveGameInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "游戏|存档")
-	bool NeedNotSave() const;
-	virtual bool NeedNotSave_Implementation() const;
-	static bool NeedNotSave(UObject* Obj) { return IXD_SaveGameInterface::Execute_NeedNotSave(Obj); }
+	bool NeedSave() const;
+	virtual bool NeedSave_Implementation() const;
+	static bool NeedSave(UObject* Obj) { return IXD_SaveGameInterface::Execute_NeedSave(Obj); }
 
 	//只有Actor与Component会调用
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
