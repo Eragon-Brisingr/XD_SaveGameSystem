@@ -53,10 +53,6 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 		static void SerilizeActorSpecialInfo(FXD_WriteArchive& Ar, AActor* Actor)
 		{
-			if (Actor->Implements<UXD_SaveGameInterface>())
-			{
-				IXD_SaveGameInterface::WhenPreSave(Actor);
-			}
 			Actor->Serialize(Ar);
 
 			TArray<UActorComponent*> NeedSaveComponents;
@@ -78,7 +74,6 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 				Ar.ObjectReferenceCollection.Add(Component);
 
-				IXD_SaveGameInterface::WhenPreSave(Component);
 				Component->Serialize(Ar);
 			}
 		}
@@ -87,6 +82,12 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 	int32 ObjectIndex = ObjectReferenceCollection.IndexOfByKey(Obj);
 	if (ObjectIndex == INDEX_NONE)
 	{
+		//保存前的预处理
+		if (Obj && Obj->Implements<UXD_SaveGameInterface>())
+		{
+			IXD_SaveGameInterface::WhenPreSave(Obj);
+		}
+
 		int32 AddIndex = ObjectReferenceCollection.Add(Obj);
 		*this << AddIndex;
 

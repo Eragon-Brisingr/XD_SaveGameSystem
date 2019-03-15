@@ -55,6 +55,14 @@ class APawn* UXD_SavePlayerBase::LoadPlayer_Implementation(APlayerController* Pl
 		PlayerController->SetControlRotation(PlayerControllerRotation);
 	});
 
+	for (UObject* Object : ReferenceCollection)
+	{
+		if (Object && Object->Implements<UXD_SaveGameInterface>())
+		{
+			IXD_SaveGameInterface::WhenPostLoad(Object);
+		}
+	}
+
 	SaveGameSystem_Display_Log("读取玩家[%s]，角色%s，控制器%s", *GetPlayerSaveSlotName(PlayerController->PlayerState), *UXD_DebugFunctionLibrary::GetDebugName(PlayerCharacter), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
 
 	return PlayerCharacter;

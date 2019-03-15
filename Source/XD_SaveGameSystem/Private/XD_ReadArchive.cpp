@@ -44,17 +44,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 					}
 					Ar.ObjectReferenceCollection.Add(Component);
 					Component->Serialize(Ar);
-
-					if (Component->Implements<UXD_SaveGameInterface>())
-					{
-						IXD_SaveGameInterface::WhenPostLoad(Component);
-					}
 				}
-			}
-
-			if (Actor->Implements<UXD_SaveGameInterface>())
-			{
-				IXD_SaveGameInterface::WhenPostLoad(Actor);
 			}
 		}
 	};

@@ -13,7 +13,7 @@ bool UXD_SaveLevelBase::SaveLevel(ULevel* OuterLevel)
 
 		for (AActor* Actor : OuterLevel->Actors)
 		{
-			if (Actor && Actor->Implements<UXD_SaveGameInterface>() && !IXD_SaveGameInterface::NeedSave(Actor))
+			if (Actor && Actor->Implements<UXD_SaveGameInterface>() && IXD_SaveGameInterface::NeedSave(Actor))
 			{
 				ActorRecorders.Add(UXD_SaveGameFunctionLibrary::SerializeObject(Actor, OuterLevel, ObjectReferenceCollection));
 			}
@@ -99,6 +99,9 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 
 			TArray<UObject*> ObjectReferenceCollection;
 
+			int32 LoadDataIdx = 0;
+			int32 ExecutePostLoadIdx = 0;
+
 			bool LoadActorsTick(float DeltaSceonds)
 			{
 				if (Level.IsValid() == false || SaveLevelBase.IsValid() == false)
@@ -112,82 +115,89 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 
 				double StartTime = FPlatformTime::Seconds();
 
-				int LoadCount = 0;
-				while (LoadCount < SaveLevelBase->ActorRecorders.Num())
+				TArray<FXD_SaveGameRecorder>& ActorRecorders = SaveLevelBase->ActorRecorders;
+				for (;LoadDataIdx < ActorRecorders.Num(); ++LoadDataIdx)
 				{
-					FXD_SaveGameRecorder& XD_Recorder = SaveLevelBase->ActorRecorders[LoadCount];
+					FXD_SaveGameRecorder& XD_Recorder = ActorRecorders[LoadDataIdx];
 					UXD_SaveGameFunctionLibrary::DeserializeObject(XD_Recorder, Level.Get(), ObjectReferenceCollection, SaveLevelBase->OldWorldOrigin);
-
-					++LoadCount;
 
 					if (FPlatformTime::Seconds() - StartTime > TimeLimit)
 					{
-						break;
+						return true;
 					}
 				}
-				SaveLevelBase->ActorRecorders.RemoveAt(0, LoadCount);
 
-				if (SaveLevelBase->ActorRecorders.Num() != 0)
+				//分帧执行读取后的事件
+				for (; ExecutePostLoadIdx < ObjectReferenceCollection.Num(); ++ExecutePostLoadIdx)
 				{
-					return true;
+					UObject* Object = ObjectReferenceCollection[ExecutePostLoadIdx];
+					if (Object && Object->Implements<UXD_SaveGameInterface>())
+					{
+						IXD_SaveGameInterface::WhenPostLoad(Object);
+					}
+
+					if (FPlatformTime::Seconds() - StartTime > TimeLimit)
+					{
+						return true;
+					}
 				}
-				else
+
+				//------------------当读取完毕
+
+				//过滤出被读取的Actor
+				for (UObject* Object : ObjectReferenceCollection)
 				{
-					//过滤出被读取的Actor
+					if (AActor* Actor = Cast<AActor>(Object))
+					{
+						RemainExistActors.Add(Actor);
+					}
+				}
+
+				TSet<TWeakObjectPtr<AActor>> NeedDestroyActors(NeedBeLoadActors.Difference(RemainExistActors));
+				//LOG
+				{
+					FString LoadedObjectsDesc;
 					for (UObject* Object : ObjectReferenceCollection)
 					{
-						if (AActor* Actor = Cast<AActor>(Object))
-						{
-							RemainExistActors.Add(Actor);
-						}
+						LoadedObjectsDesc += UXD_DebugFunctionLibrary::GetDebugName(Object) + TEXT(" | ");
 					}
 
-					TSet<TWeakObjectPtr<AActor>> NeedDestroyActors(NeedBeLoadActors.Difference(RemainExistActors));
-					//LOG
-					{
-						FString LoadedObjectsDesc;
-						for (UObject* Object : ObjectReferenceCollection)
-						{
-							LoadedObjectsDesc += UXD_DebugFunctionLibrary::GetDebugName(Object) + TEXT(" | ");
-						}
-
-						FString DestroyedActorsDesc;
-						for (const TWeakObjectPtr<AActor>& Actor : NeedDestroyActors)
-						{
-							if (Actor.IsValid())
-							{
-								DestroyedActorsDesc += UXD_DebugFunctionLibrary::GetDebugName(Actor.Get()) + TEXT(" | ");
-							}
-						}
-
-						SaveGameSystem_Display_Log("--------------------------------------读取关卡[%s]--------------------------------------", *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()));
-
-						SaveGameSystem_Display_Log("读取的Object列表：%s", *LoadedObjectsDesc);
-
-						SaveGameSystem_Display_Log("删除的Actor列表：%s", *DestroyedActorsDesc);
-					}
-
-					//删除没被读取的Actor
+					FString DestroyedActorsDesc;
 					for (const TWeakObjectPtr<AActor>& Actor : NeedDestroyActors)
 					{
 						if (Actor.IsValid())
 						{
-							Actor->Destroy();
+							DestroyedActorsDesc += UXD_DebugFunctionLibrary::GetDebugName(Actor.Get()) + TEXT(" | ");
 						}
 					}
 
-					if (Level.IsValid())
-					{
-						UXD_SaveGameSystemBase::EndLoadLevel(Level.Get());
-					}
+					SaveGameSystem_Display_Log("--------------------------------------读取关卡[%s]--------------------------------------", *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()));
 
-					//最后删除自己防止内存泄露
-					if (!IsNoSplitFrameLoadUse)
-					{
-						delete this;
-					}
-					return false;
+					SaveGameSystem_Display_Log("读取的Object列表：%s", *LoadedObjectsDesc);
+
+					SaveGameSystem_Display_Log("删除的Actor列表：%s", *DestroyedActorsDesc);
 				}
+
+				//删除没被读取的Actor
+				for (const TWeakObjectPtr<AActor>& Actor : NeedDestroyActors)
+				{
+					if (Actor.IsValid())
+					{
+						Actor->Destroy();
+					}
+				}
+
+				if (Level.IsValid())
+				{
+					UXD_SaveGameSystemBase::EndLoadLevel(Level.Get());
+				}
+
+				//最后删除自己防止内存泄露
+				if (!IsNoSplitFrameLoadUse)
+				{
+					delete this;
+				}
+				return false;
 			}
 		};
 
