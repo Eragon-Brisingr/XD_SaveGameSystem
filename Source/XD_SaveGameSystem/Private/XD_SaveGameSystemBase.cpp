@@ -50,6 +50,11 @@ FString UXD_SaveGameSystemBase::MakeFullSlotName(FString SlotCategory, FString S
 	}
 }
 
+void UXD_SaveGameSystemBase::OnLevelUnload(AActor* Actor, EEndPlayReason::Type EndPlayReason)
+{
+	OnPreLevelUnload.Broadcast(Cast<ULevel>(Actor));
+}
+
 void UXD_SaveGameSystemBase::InitAutoSaveLoadSystem(class AGameModeBase* GameMode)
 {
 	UWorld* World = GameMode->GetWorld();
@@ -223,7 +228,8 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 	//或许有更好的时机去保存关卡
 	if (AWorldSettings* WorldSettings = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level))
 	{
-		UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
+		UXD_SG_WorldSettingsComponent* SG_WorldSettingsComponent = UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
+		WorldSettings->OnEndPlay.AddDynamic(this, &UXD_SaveGameSystemBase::OnLevelUnload);
 	}
 	else
 	{
@@ -303,6 +309,10 @@ void UXD_SaveGameSystemBase::EndLoadLevel(ULevel* Level)
 	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
 		WorldSettingsComponent->bIsLoadingLevel = false;
+	}
+	if (UXD_SaveGameSystemBase* SaveGameSystem = Get(Level))
+	{
+		SaveGameSystem->OnLoadLevelCompleted.Broadcast(Level);
 	}
 }
 

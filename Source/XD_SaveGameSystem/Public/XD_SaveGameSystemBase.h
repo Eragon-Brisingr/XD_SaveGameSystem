@@ -50,6 +50,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "存档系统")
 	float SplitFrameLoadActorLimitSeconds = 0.005f;
+
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreLevelUnload, ULevel*);
+	FOnPreLevelUnload OnPreLevelUnload;
+
+	UFUNCTION()
+	void OnLevelUnload(AActor* Actor, EEndPlayReason::Type EndPlayReason);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLoadLevelCompleted, ULevel*, Level);
+	FOnLoadLevelCompleted OnLoadLevelCompleted;
 private:
 	//只有读取时Spawn的Actor不执行Init
 	uint8 bShouldInitSpawnActor : 1;
