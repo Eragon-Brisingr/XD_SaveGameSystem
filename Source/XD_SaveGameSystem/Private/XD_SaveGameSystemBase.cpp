@@ -50,11 +50,6 @@ FString UXD_SaveGameSystemBase::MakeFullSlotName(FString SlotCategory, FString S
 	}
 }
 
-void UXD_SaveGameSystemBase::OnLevelUnload(AActor* Actor, EEndPlayReason::Type EndPlayReason)
-{
-	OnPreLevelUnload.Broadcast(Cast<ULevel>(Actor));
-}
-
 void UXD_SaveGameSystemBase::InitAutoSaveLoadSystem(class AGameModeBase* GameMode)
 {
 	UWorld* World = GameMode->GetWorld();
@@ -229,7 +224,10 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 	if (AWorldSettings* WorldSettings = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level))
 	{
 		UXD_SG_WorldSettingsComponent* SG_WorldSettingsComponent = UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
-		WorldSettings->OnEndPlay.AddDynamic(this, &UXD_SaveGameSystemBase::OnLevelUnload);
+		SG_WorldSettingsComponent->OnWorldSettingsComponentEndPlay.AddLambda([=](const EEndPlayReason::Type EndPlayReason)
+		{
+			OnPreLevelUnload.Broadcast(Level);
+		});
 	}
 	else
 	{

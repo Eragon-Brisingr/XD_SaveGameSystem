@@ -54,9 +54,6 @@ public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreLevelUnload, ULevel*);
 	FOnPreLevelUnload OnPreLevelUnload;
 
-	UFUNCTION()
-	void OnLevelUnload(AActor* Actor, EEndPlayReason::Type EndPlayReason);
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLoadLevelCompleted, ULevel*, Level);
 	FOnLoadLevelCompleted OnLoadLevelCompleted;
 private:

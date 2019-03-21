@@ -34,4 +34,6 @@ void UXD_SG_WorldSettingsComponent::EndPlay(const EEndPlayReason::Type EndPlayRe
 			}
 		}
 	}
+
+	OnWorldSettingsComponentEndPlay.Broadcast(EndPlayReason);
 }

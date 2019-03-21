@@ -21,4 +21,7 @@ public:
 	uint8 bIsInitingLevel : 1;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldSettingsComponentEndPlay, const EEndPlayReason::Type);
+	FOnWorldSettingsComponentEndPlay OnWorldSettingsComponentEndPlay;
 };
