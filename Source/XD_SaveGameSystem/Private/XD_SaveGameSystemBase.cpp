@@ -111,8 +111,11 @@ void UXD_SaveGameSystemBase::SaveGame(UObject* WorldContextObject)
 	//TODO 保存版本号
 
 	//保存所有加载的关卡
-	for (ULevel* Level : WorldContextObject->GetWorld()->GetLevels())
+	//主关卡最后保存（可能有全局数据），所以倒着保存关卡
+	const TArray<ULevel*>& Levels = WorldContextObject->GetWorld()->GetLevels();
+	for (int32 Idx = Levels.Num() - 1; Idx >= 0; --Idx)
 	{
+		ULevel* Level = Levels[Idx];
 		if (CanSaveLevel(Level))
 		{
 			SaveLevel(Level);
@@ -147,10 +150,12 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 		{
 			struct FSplitFrameInitActorsHelper
 			{
+				FInitLevelGuard InitLevelGuard;
+
 				FSplitFrameInitActorsHelper(ULevel* Level)
-					:Level(Level)
+					:Level(Level), InitLevelGuard(Level)
 				{
-					StartInitLevel(Level);
+
 				}
 
 				TWeakObjectPtr<ULevel> Level;
@@ -184,11 +189,6 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 					}
 					else
 					{
-						if (Level.IsValid())
-						{
-							EndInitLevel(Level.Get());
-						}
-
 						delete this;
 						return false;
 					}
@@ -208,7 +208,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 		}
 		else
 		{
-			StartInitLevel(Level);
+			FInitLevelGuard InitLevelGuard(Level);
 			for (AActor* Actor : TArray<AActor*>(Level->Actors))
 			{
 				if (Actor && Actor->Implements<UXD_SaveGameInterface>())
@@ -216,7 +216,6 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 					NotifyActorAndComponentInit(Actor);
 				}
 			}
-			EndInitLevel(Level);
 		}
 	}
 
@@ -291,44 +290,6 @@ bool UXD_SaveGameSystemBase::CanSaveLevel(ULevel* Level)
 		return true;
 	}
 	return false;
-}
-
-void UXD_SaveGameSystemBase::StartLoadLevel(ULevel* Level)
-{
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
-	{
-		WorldSettingsComponent->bIsLoadingLevel = true;
-		WorldSettingsComponent->bIsInitingLevel = false;
-	}
-}
-
-void UXD_SaveGameSystemBase::EndLoadLevel(ULevel* Level)
-{
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
-	{
-		WorldSettingsComponent->bIsLoadingLevel = false;
-	}
-	if (UXD_SaveGameSystemBase* SaveGameSystem = Get(Level))
-	{
-		SaveGameSystem->OnLoadLevelCompleted.Broadcast(Level);
-	}
-}
-
-void UXD_SaveGameSystemBase::StartInitLevel(ULevel* Level)
-{
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
-	{
-		WorldSettingsComponent->bIsInitingLevel = true;
-		WorldSettingsComponent->bIsLoadingLevel = false;
-	}
-}
-
-void UXD_SaveGameSystemBase::EndInitLevel(ULevel* Level)
-{
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
-	{
-		WorldSettingsComponent->bIsInitingLevel = false;
-	}
 }
 
 bool UXD_SaveGameSystemBase::IsLevelInitCompleted(ULevel* Level)
@@ -407,6 +368,54 @@ void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason
 		if (SaveGameSystem->bEnableAutoSave && UXD_SaveGameSystemBase::IsAutoSaveLevel(Actor))
 		{
 			SaveGameSystem->SavePlayer(PlayerContoller, Cast<APawn>(Actor), PlayerState);
+		}
+	}
+}
+
+UXD_SaveGameSystemBase::FInitLevelGuard::FInitLevelGuard(ULevel* Level) 
+	:Level(Level)
+{
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	{
+		check(WorldSettingsComponent->bIsLoadingLevel == false);
+
+		WorldSettingsComponent->bIsInitingLevel = true;
+	}
+}
+
+UXD_SaveGameSystemBase::FInitLevelGuard::~FInitLevelGuard()
+{
+	if (ULevel* LevelRef = Level.Get())
+	{
+		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(LevelRef)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+		{
+			WorldSettingsComponent->bIsInitingLevel = false;
+		}
+	}
+}
+
+UXD_SaveGameSystemBase::FLoadLevelGuard::FLoadLevelGuard(ULevel* Level)
+	:Level(Level)
+{
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	{
+		check(WorldSettingsComponent->bIsInitingLevel == false);
+
+		WorldSettingsComponent->bIsLoadingLevel = true;
+	}
+}
+
+UXD_SaveGameSystemBase::FLoadLevelGuard::~FLoadLevelGuard()
+{
+	if (ULevel* LevelRef = Level.Get())
+	{
+		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(LevelRef)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+		{
+			WorldSettingsComponent->bIsLoadingLevel = false;
+		}
+		if (UXD_SaveGameSystemBase* SaveGameSystem = Get(LevelRef))
+		{
+			SaveGameSystem->OnLoadLevelCompleted.Broadcast(LevelRef);
 		}
 	}
 }

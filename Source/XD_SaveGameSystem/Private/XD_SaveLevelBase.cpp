@@ -52,11 +52,11 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 	{
 		struct FSplitFrameLoadActorHelper
 		{
-			FSplitFrameLoadActorHelper(ULevel* Level, UXD_SaveLevelBase* SaveLevelBase, bool IsNoSplitFrameLoadUse = false)
-				:Level(Level), SaveLevelBase(SaveLevelBase), IsNoSplitFrameLoadUse(IsNoSplitFrameLoadUse)
-			{
-				UXD_SaveGameSystemBase::StartLoadLevel(Level);
+			UXD_SaveGameSystemBase::FLoadLevelGuard LoadLevelGuard;
 
+			FSplitFrameLoadActorHelper(ULevel* Level, UXD_SaveLevelBase* SaveLevelBase, bool IsNoSplitFrameLoadUse = false)
+				:Level(Level), LoadLevelGuard(Level), SaveLevelBase(SaveLevelBase), IsNoSplitFrameLoadUse(IsNoSplitFrameLoadUse)
+			{
 				if (IsNoSplitFrameLoadUse)
 				{
 					TimeLimit = TNumericLimits<double>::Max();
@@ -185,11 +185,6 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 					{
 						Actor->Destroy();
 					}
-				}
-
-				if (Level.IsValid())
-				{
-					UXD_SaveGameSystemBase::EndLoadLevel(Level.Get());
 				}
 
 				//最后删除自己防止内存泄露

@@ -67,13 +67,17 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			Ar << ComponentNumber;
 			for (UActorComponent* Component : NeedSaveComponents)
 			{
+				if (Component->Implements<UXD_SaveGameInterface>())
+				{
+					IXD_SaveGameInterface::WhenPreSave(Component);
+				}
+
 				FXD_DynamicSaveData DynamicSaveData;
 				DynamicSaveData.ClassPath = Component->GetClass();
 				DynamicSaveData.Name = Component->GetName();
 				FXD_DynamicSaveData::StaticStruct()->SerializeBin(Ar, &DynamicSaveData);
 
 				Ar.ObjectReferenceCollection.Add(Component);
-
 				Component->Serialize(Ar);
 			}
 		}

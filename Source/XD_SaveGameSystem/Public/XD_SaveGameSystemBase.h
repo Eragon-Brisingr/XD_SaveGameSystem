@@ -92,13 +92,18 @@ private:
 
 	static bool CanSaveLevel(ULevel* Level);
 
-	static void StartLoadLevel(ULevel* Level);
-
-	static void EndLoadLevel(ULevel* Level);
-
-	static void StartInitLevel(ULevel* Level);
-
-	static void EndInitLevel(ULevel* Level);
+	struct FLoadLevelGuard
+	{
+		FLoadLevelGuard(ULevel* Level);
+		~FLoadLevelGuard();
+		TWeakObjectPtr<ULevel> Level;
+	};
+	struct FInitLevelGuard
+	{
+		FInitLevelGuard(ULevel* Level);
+		~FInitLevelGuard();
+		TWeakObjectPtr<ULevel> Level;
+	};
 
 	static bool IsLevelInitCompleted(ULevel* Level);
 
