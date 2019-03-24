@@ -222,6 +222,12 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 	//或许有更好的时机去保存关卡
 	if (AWorldSettings* WorldSettings = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level))
 	{
+		//子层级的WorldSettings不设置BegunPlay状态，手动调用
+		if (WorldSettings->HasActorBegunPlay() == false)
+		{
+			WorldSettings->DispatchBeginPlay();
+		}
+
 		UXD_SG_WorldSettingsComponent* SG_WorldSettingsComponent = UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
 		SG_WorldSettingsComponent->OnWorldSettingsComponentEndPlay.AddLambda([=](const EEndPlayReason::Type EndPlayReason)
 		{
