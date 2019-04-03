@@ -55,7 +55,7 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 			UXD_SaveGameSystemBase::FLoadLevelGuard LoadLevelGuard;
 
 			FSplitFrameLoadActorHelper(ULevel* Level, UXD_SaveLevelBase* SaveLevelBase, bool IsNoSplitFrameLoadUse = false)
-				:Level(Level), LoadLevelGuard(Level), SaveLevelBase(SaveLevelBase), IsNoSplitFrameLoadUse(IsNoSplitFrameLoadUse)
+				:LoadLevelGuard(Level), Level(Level), SaveLevelBase(SaveLevelBase), IsNoSplitFrameLoadUse(IsNoSplitFrameLoadUse)
 			{
 				if (IsNoSplitFrameLoadUse)
 				{
@@ -86,12 +86,11 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 				}
 			}
 
-			bool IsNoSplitFrameLoadUse;
-
 			double TimeLimit;
 
 			TWeakObjectPtr<ULevel> Level;
 			TWeakObjectPtr<UXD_SaveLevelBase> SaveLevelBase;
+			bool IsNoSplitFrameLoadUse;
 
 			TSet<TWeakObjectPtr<AActor>> NeedBeLoadActors;
 

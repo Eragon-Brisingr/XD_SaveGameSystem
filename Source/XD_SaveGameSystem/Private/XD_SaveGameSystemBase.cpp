@@ -16,9 +16,9 @@
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
-	:SaveLevelClass(UXD_SaveLevelBase::StaticClass()),
+	:bEnableAutoSave(true),
+	SaveLevelClass(UXD_SaveLevelBase::StaticClass()),
 	SavePlayerClass(UXD_SavePlayerBase::StaticClass()),
-	bEnableAutoSave(true),
 	bShouldInitSpawnActor(true)
 {
 
@@ -150,15 +150,14 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 		{
 			struct FSplitFrameInitActorsHelper
 			{
-				FInitLevelGuard InitLevelGuard;
-
 				FSplitFrameInitActorsHelper(ULevel* Level)
 					:Level(Level), InitLevelGuard(Level)
 				{
 
 				}
-
 				TWeakObjectPtr<ULevel> Level;
+				FInitLevelGuard InitLevelGuard;
+
 
 				TArray<TWeakObjectPtr<AActor>> InvokeToInitActors;
 

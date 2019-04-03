@@ -23,11 +23,11 @@ public:
 
 	TWeakObjectPtr<class ULevel> Level;
 
-	FIntVector OldWorldOrigin;
-
 	TArray<UObject*>& ObjectReferenceCollection;
 
-	FString GetArchiveName() const { return TEXT("FXD_ReadArchive"); }
+	FIntVector OldWorldOrigin;
+
+	FString GetArchiveName() const override { return TEXT("FXD_ReadArchive"); }
 
 	virtual FArchive& operator<<(class UObject*& Obj) override;
 };
