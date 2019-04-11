@@ -13,6 +13,7 @@
 #include "XD_ActorFunctionLibrary.h"
 #include "XD_SavePlayerBase.h"
 #include <GameFramework/PlayerState.h>
+#include <Engine/World.h>
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
@@ -61,7 +62,7 @@ void UXD_SaveGameSystemBase::InitAutoSaveLoadSystem(class AGameModeBase* GameMod
 		LoadLevelOrInitLevel(Level, false);
 	}
 
-	OnLevelAdd_DelegateHandle = FWorldDelegates::LevelAddedToWorld.AddLambda([this](ULevel* Level, UWorld* World)
+	OnLevelAdd_DelegateHandle = FWorldDelegates::LevelAddedToWorld.AddWeakLambda(this, [this](ULevel* Level, UWorld* World)
 	{
 		//由于绑的是全局回调，PIE内没法分辨是不是为Server，在这里再做判断
 		if (Level->GetWorld()->IsServer() == false)
@@ -228,7 +229,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 		}
 
 		UXD_SG_WorldSettingsComponent* SG_WorldSettingsComponent = UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
-		SG_WorldSettingsComponent->OnWorldSettingsComponentEndPlay.AddLambda([=](const EEndPlayReason::Type EndPlayReason)
+		SG_WorldSettingsComponent->OnWorldSettingsComponentEndPlay.AddWeakLambda(this, [=](const EEndPlayReason::Type EndPlayReason)
 		{
 			OnPreLevelUnload.Broadcast(Level);
 		});
@@ -241,7 +242,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 
 void UXD_SaveGameSystemBase::WhenActorSpawnInitActor(UWorld* World)
 {
-	World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateLambda([this](AActor* Actor)
+	World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateWeakLambda(this, [this](AActor* Actor)
 	{
 		if (bShouldInitSpawnActor && Actor->Implements<UXD_SaveGameInterface>())
 		{
