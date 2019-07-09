@@ -1,6 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "XD_ReadArchive.h"
+#include "GameFramework/Actor.h"
+#include "Engine/World.h"
 #include "XD_DebugFunctionLibrary.h"
 #include "XD_LevelFunctionLibrary.h"
 #include "XD_SaveGameInterface.h"
@@ -22,6 +24,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 		static void DeserilizeActorSpecialInfo(FXD_ReadArchive& Ar, AActor* Actor)
 		{
 			Actor->Serialize(Ar);
+			IXD_SaveGameInterface::WhenGameSerialize(Actor, Ar);
 
 			uint8 ComponentNumber;
 			Ar << ComponentNumber;
@@ -44,6 +47,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 					}
 					Ar.ObjectReferenceCollection.Add(Component);
 					Component->Serialize(Ar);
+					IXD_SaveGameInterface::WhenGameSerialize(Component, Ar);
 				}
 			}
 		}
@@ -71,8 +75,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			{
 				SaveGameSystem_Error_Log("读取资源[%s]失败，路径为[%s]", *GetSubObjectName(AssetSaveData.Path), *AssetSaveData.Path.GetLongPackageName());
 			}
+			break;
 		}
-		break;
 		case EObjectArchiveType::InPackageObject:
 		{
 			FXD_InPackageSaveData InPackageSaveData;
@@ -91,8 +95,9 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			}
 
 			findObject->Serialize(*this);
+			IXD_SaveGameInterface::WhenGameSerialize(findObject, *this);
+			break;
 		}
-		break;
 		case EObjectArchiveType::DynamicObject:
 		{
 			FXD_DynamicSaveData DynamicSaveData;
@@ -122,15 +127,20 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			}
 
 			UObject* Object = StaticFindObject(ObjectClass, Outer, *ObjectName, true);
-			if (Object == nullptr)
+			if (Object)
+			{
+				SaveGameSystem_Warning_LOG("因动态生成的Object%s已存在于%s中，请检查原因", *UXD_DebugFunctionLibrary::GetDebugName(Object), *UXD_DebugFunctionLibrary::GetDebugName(Outer));
+			}
+			else
 			{
 				Object = NewObject<UObject>(Outer, ObjectClass, *ObjectName);
 			}
 			ObjectReferenceCollection.Add(Object);
 
 			Object->Serialize(*this);
+			IXD_SaveGameInterface::WhenGameSerialize(Object, *this);
+			break;
 		}
-		break;
 		case EObjectArchiveType::InPackageActor:
 		{
 			FXD_InPackageSaveData InPackageSaveData;
@@ -174,8 +184,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			{
 				findActor->Destroy();
 			}
+			break;
 		}
-		break;
 		case EObjectArchiveType::DynamicActor:
 		{
 			FXD_DynamicSaveData DynamicSaveData;
@@ -256,8 +266,8 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 					ObjectReferenceCollection[AddIndex] = nullptr;
 				}
 			}
+			break;
 		}
-		break;
 		}
 	}
 	Obj = ObjectReferenceCollection[ObjectIndex];

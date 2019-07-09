@@ -1,10 +1,12 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "XD_WriteArchive.h"
+#include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include "XD_DebugFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_GameTypeEx.h"
-#include "Components/ActorComponent.h"
+#include "XD_SaveGameInterface.h"
 
 FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 {
@@ -54,6 +56,8 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		static void SerilizeActorSpecialInfo(FXD_WriteArchive& Ar, AActor* Actor)
 		{
 			Actor->Serialize(Ar);
+			IXD_SaveGameInterface::WhenGameSerialize(Actor, Ar);
+
 
 			TArray<UActorComponent*> NeedSaveComponents;
 			for (UActorComponent* Component : Actor->GetComponents())
@@ -79,6 +83,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 
 				Ar.ObjectReferenceCollection.Add(Component);
 				Component->Serialize(Ar);
+				IXD_SaveGameInterface::WhenGameSerialize(Component, Ar);
 			}
 		}
 	};
@@ -102,14 +107,14 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		switch (ObjectArchiveType)
 		{
 		case EObjectArchiveType::NullObject:
-			return *this;
+			break;
 		case EObjectArchiveType::Asset:
 		{
 			FXD_AssetSaveData AssetSaveData;
 			AssetSaveData.Path = Obj;
 			FXD_AssetSaveData::StaticStruct()->SerializeBin(*this, &AssetSaveData);
+			break;
 		}
-		return *this;
 		case EObjectArchiveType::InPackageObject:
 		{
 			check(Obj->IsA<UActorComponent>() == false);
@@ -120,8 +125,9 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
 
 			Obj->Serialize(*this);
+			IXD_SaveGameInterface::WhenGameSerialize(Obj, *this);
+			break;
 		}
-		return *this;
 		case EObjectArchiveType::DynamicObject:
 		{
 			FXD_DynamicSaveData DynamicSaveData;
@@ -157,8 +163,9 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			}
 
 			Obj->Serialize(*this);
+			IXD_SaveGameInterface::WhenGameSerialize(Obj, *this);
+			break;
 		}
-		return *this;
 		case EObjectArchiveType::InPackageActor:
 		{
 			AActor* Actor = CastChecked<AActor>(Obj);
@@ -181,8 +188,8 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 #if WITH_EDITOR
 			TopActor.Pop();
 #endif
+			break;
 		}
-		return *this;
 		case EObjectArchiveType::DynamicActor:
 		{
 			AActor* Actor = CastChecked<AActor>(Obj);
@@ -229,10 +236,9 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 #if WITH_EDITOR
 			TopActor.Pop();
 #endif
+			break;
 		}
-		return *this;
 		}
-
 
 		return *this;
 	}
