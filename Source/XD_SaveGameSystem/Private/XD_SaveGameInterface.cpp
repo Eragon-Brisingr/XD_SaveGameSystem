@@ -5,6 +5,13 @@
 #include "XD_DebugFunctionLibrary.h"
 
 
+const FGuid FXD_SaveGameVersion::Guid = FGuid(0x717F9EE7, 0xE9B0493A, 0x88B39123, 0x1B382222);
+
+const FName FXD_SaveGameVersion::FriendlyName = TEXT("XD_SaveGame");
+
+int32 FXD_SaveGameVersion::Version = FXD_SaveGameVersion::Original;
+
+
 // Add default functionality here for any IXD_SaveGameInterface functions that are not pure virtual.
 
 //Init的时候可能会SpawnActor，不能用bool
@@ -44,4 +51,9 @@ bool IXD_SaveGameInterface::NeedSave_Implementation() const
 void IXD_SaveGameInterface::WhenPostLoad_Implementation()
 {
 
+}
+
+int32 IXD_SaveGameInterface::GetSaveGameVersion(FArchive& Archive)
+{
+	return Archive.CustomVer(FXD_SaveGameVersion::Guid);
 }

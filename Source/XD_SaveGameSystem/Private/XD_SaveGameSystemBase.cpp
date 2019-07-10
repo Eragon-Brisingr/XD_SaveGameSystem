@@ -14,6 +14,7 @@
 #include "XD_SavePlayerBase.h"
 #include <GameFramework/PlayerState.h>
 #include <Engine/World.h>
+#include "XD_SaveGameInterface.h"
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
@@ -360,6 +361,11 @@ void UXD_SaveGameSystemBase::RegisterAutoSavePlayer(class APawn* Pawn)
 		SaveGameSystem_Display_Log("玩家[%s]登记为自动保存", *PlayerController->PlayerState->GetPlayerName());
 		Pawn->OnEndPlay.AddDynamic(AutoSavePlayerLamdba, &UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame);
 	}
+}
+
+void UXD_SaveGameSystemBase::SetSaveGameVersion(int32 Version)
+{
+	FXD_SaveGameVersion::Version = Version;
 }
 
 void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason::Type EndPlayReason)

@@ -17,6 +17,19 @@ FString GetSubObjectName(const TSoftObjectPtr<T>& SoftObjectPtr)
 	return SubObjectName;
 }
 
+FXD_ReadArchive::FXD_ReadArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection, const FIntVector& OldWorldOrigin) :FXD_ProxyArchiveBase(InInnerArchive), Level(Level), ObjectReferenceCollection(ObjectReferenceCollection), OldWorldOrigin(OldWorldOrigin)
+{
+	ArIsSaveGame = true;
+
+	SetIsLoading(true);
+
+	SetIsPersistent(false);
+
+	int32 CurVersion;
+	*this << CurVersion;
+	SetCustomVersion(FXD_SaveGameVersion::Guid, CurVersion, FXD_SaveGameVersion::FriendlyName);
+}
+
 FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 {
 	struct FXD_ReadArchiveHelper

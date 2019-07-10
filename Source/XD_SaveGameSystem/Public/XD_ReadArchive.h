@@ -11,15 +11,7 @@
 struct XD_SAVEGAMESYSTEM_API FXD_ReadArchive : public FXD_ProxyArchiveBase
 {
 public:
-	FXD_ReadArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection, const FIntVector& OldWorldOrigin)
-		:FXD_ProxyArchiveBase(InInnerArchive), Level(Level), ObjectReferenceCollection(ObjectReferenceCollection), OldWorldOrigin(OldWorldOrigin)
-	{
-		ArIsSaveGame = true;
-
-		SetIsLoading(true);
-
-		SetIsPersistent(false);
-	}
+	FXD_ReadArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection, const FIntVector& OldWorldOrigin);
 
 	TWeakObjectPtr<class ULevel> Level;
 

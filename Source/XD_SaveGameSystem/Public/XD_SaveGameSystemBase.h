@@ -115,6 +115,9 @@ private:
 	APawn* TryLoadPlayer(class APlayerController* Player);
 
 	void RegisterAutoSavePlayer(class APawn* Pawn);
+
+protected:
+	void SetSaveGameVersion(int32 Version);
 };
 
 UCLASS()

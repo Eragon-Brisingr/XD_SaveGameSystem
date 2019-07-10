@@ -8,6 +8,17 @@
 #include "XD_GameTypeEx.h"
 #include "XD_SaveGameInterface.h"
 
+FXD_WriteArchive::FXD_WriteArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection) :FXD_ProxyArchiveBase(InInnerArchive), Level(Level), ObjectReferenceCollection(ObjectReferenceCollection)
+{
+	ArIsSaveGame = true;
+
+	SetIsSaving(true);
+
+	SetIsPersistent(false);
+
+	*this << FXD_SaveGameVersion::Version;
+}
+
 FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 {
 	struct FXD_WriteArchiveHelper

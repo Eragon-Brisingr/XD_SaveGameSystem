@@ -78,7 +78,7 @@ struct XD_SAVEGAMESYSTEM_API FXD_ProxyArchiveBase : public FArchiveProxy
 
 	using FArchive::operator<<; // For visibility of the overloads we don't override
 
-								//~ Begin FArchive Interface
+	//~ Begin FArchive Interface
 	virtual FArchive& operator<<(FLazyObjectPtr& Value) override;
 	virtual FArchive& operator<<(FSoftObjectPtr& Value) override;
 	virtual FArchive& operator<<(FSoftObjectPath& Value) override;

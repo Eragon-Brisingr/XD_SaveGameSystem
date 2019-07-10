@@ -10,15 +10,7 @@
  */
 struct XD_SAVEGAMESYSTEM_API FXD_WriteArchive : public FXD_ProxyArchiveBase
 {
-	FXD_WriteArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection)
-		:FXD_ProxyArchiveBase(InInnerArchive), Level(Level), ObjectReferenceCollection(ObjectReferenceCollection)
-	{
-		ArIsSaveGame = true;
-
-		SetIsSaving(true);
-
-		SetIsPersistent(false);
-	}
+	FXD_WriteArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection);
 
 	TArray<TWeakObjectPtr<class AActor>> TopActor;
 

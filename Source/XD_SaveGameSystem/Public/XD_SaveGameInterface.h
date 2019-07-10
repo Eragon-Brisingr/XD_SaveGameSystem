@@ -6,6 +6,20 @@
 #include "UObject/Interface.h"
 #include "XD_SaveGameInterface.generated.h"
 
+struct XD_SAVEGAMESYSTEM_API FXD_SaveGameVersion
+{
+	static const FGuid Guid;
+
+	static const FName FriendlyName;
+
+	static int32 Version;
+
+	enum VersionType
+	{
+		Original,
+	};
+};
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UXD_SaveGameInterface : public UInterface
@@ -46,4 +60,6 @@ public:
 
 	virtual void WhenGameSerialize(FArchive& Archive) {}
 	static void WhenGameSerialize(UObject* Obj, FArchive& Archive) { if (IXD_SaveGameInterface* SaveGameInterface = Cast<IXD_SaveGameInterface>(Obj)) SaveGameInterface->WhenGameSerialize(Archive); }
+
+	static int32 GetSaveGameVersion(FArchive& Archive);
 };
