@@ -15,6 +15,7 @@
 #include <GameFramework/PlayerState.h>
 #include <Engine/World.h>
 #include "XD_SaveGameInterface.h"
+#include "Ticker.h"
 
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
@@ -110,8 +111,6 @@ void UXD_SaveGameSystemBase::LoadGame(UObject* WorldContextObject)
 
 void UXD_SaveGameSystemBase::SaveGame(UObject* WorldContextObject)
 {
-	//TODO 保存版本号
-
 	//保存所有加载的关卡
 	//主关卡最后保存（可能有全局数据），所以倒着保存关卡
 	const TArray<ULevel*>& Levels = WorldContextObject->GetWorld()->GetLevels();

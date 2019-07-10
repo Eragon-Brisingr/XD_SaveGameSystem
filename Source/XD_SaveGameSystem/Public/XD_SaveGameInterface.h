@@ -14,6 +14,7 @@ struct XD_SAVEGAMESYSTEM_API FXD_SaveGameVersion
 
 	static int32 Version;
 
+	//项目中自行声明Type作为项目使用的Type
 	enum VersionType
 	{
 		Original,
