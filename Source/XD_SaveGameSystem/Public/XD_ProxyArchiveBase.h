@@ -64,8 +64,19 @@ struct XD_SAVEGAMESYSTEM_API FXD_ActorExtraSaveData
 {
 	GENERATED_BODY()
 public:
+	FXD_ActorExtraSaveData() = default;
+	FXD_ActorExtraSaveData(AActor* Actor);
+
+	void LoadData(AActor* Actor, ULevel* Level, const FIntVector& OldWorldOrigin) const;
+public:
 	UPROPERTY(SaveGame)
 	FTransform Transform;
+
+	UPROPERTY(SaveGame)
+	FVector LinearVelocity;
+	
+	UPROPERTY(SaveGame)
+	FVector AngularVelocity;
 };
 
 struct XD_SAVEGAMESYSTEM_API FXD_ProxyArchiveBase : public FArchiveProxy

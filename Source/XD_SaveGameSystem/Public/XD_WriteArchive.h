@@ -18,7 +18,7 @@ struct XD_SAVEGAMESYSTEM_API FXD_WriteArchive : public FXD_ProxyArchiveBase
 
 	TArray<UObject*>& ObjectReferenceCollection;
 
-	FString GetArchiveName() const { return TEXT("FXD_WriteArchive"); }
+	FString GetArchiveName() const override { return TEXT("FXD_WriteArchive"); }
 
 	virtual FArchive& operator<<(class UObject*& Obj) override;
 

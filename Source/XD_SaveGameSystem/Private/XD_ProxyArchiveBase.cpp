@@ -1,6 +1,58 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "XD_ProxyArchiveBase.h"
+#include "GameFramework/Actor.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/Level.h"
+#include "XD_LevelFunctionLibrary.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+
+FXD_ActorExtraSaveData::FXD_ActorExtraSaveData(AActor* Actor)
+{
+	Transform = Actor->GetActorTransform();
+	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+	{
+		if (PrimitiveComponent->IsSimulatingPhysics())
+		{
+			LinearVelocity = Actor->GetVelocity();
+			AngularVelocity = PrimitiveComponent->GetPhysicsAngularVelocityInDegrees();
+		}
+	}
+}
+
+void FXD_ActorExtraSaveData::LoadData(AActor* Actor, ULevel* Level, const FIntVector& OldWorldOrigin) const
+{
+	FTransform ActorTransForm = Transform;
+	ActorTransForm.SetLocation(UXD_LevelFunctionLibrary::GetFixedWorldLocation(Level, OldWorldOrigin, ActorTransForm.GetLocation()));
+	Actor->SetActorTransform(ActorTransForm, false, nullptr, ETeleportType::TeleportPhysics);
+
+	if (ACharacter* Character = Cast<ACharacter>(Actor))
+	{
+		if (UCharacterMovementComponent* CharacterMovementComponent = Character->GetCharacterMovement())
+		{
+			// 直接设置Launch无效，因为MovementMode为None，要先设置MovementMode
+			CharacterMovementComponent->SetMovementMode(MOVE_Walking);
+			CharacterMovementComponent->Launch(LinearVelocity);
+		}
+	}
+	else if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+	{
+		if (PrimitiveComponent->IsSimulatingPhysics())
+		{
+			if (!LinearVelocity.IsZero())
+			{
+				PrimitiveComponent->SetPhysicsLinearVelocity(LinearVelocity);
+			}
+			if (!AngularVelocity.IsZero())
+			{
+				PrimitiveComponent->SetPhysicsAngularVelocityInDegrees(AngularVelocity);
+			}
+		}
+	}
+}
 
 FArchive& FXD_ProxyArchiveBase::operator<<(FLazyObjectPtr& Value)
 {

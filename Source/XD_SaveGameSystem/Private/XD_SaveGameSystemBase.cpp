@@ -36,7 +36,7 @@ UXD_SaveGameSystemBase* UXD_SaveGameSystemBase::Get(const UObject* WorldContextO
 	}
 	else
 	{
-		SaveGameSystem_Warning_LOG("GameInstance尚未实现XD_SaveGame_GameInstanceInterface的GetSaveGameSystem");
+		SaveGameSystem_Warning_Log("GameInstance尚未实现XD_SaveGame_GameInstanceInterface的GetSaveGameSystem");
 		return UXD_SaveGameSystemBase::StaticClass()->GetDefaultObject<UXD_SaveGameSystemBase>();
 	}
 }
@@ -280,17 +280,17 @@ bool UXD_SaveGameSystemBase::CanSaveLevel(ULevel* Level)
 	{
 		if (WorldSettingsComponent->bIsLoadingLevel)
 		{
-			SaveGameSystem_Warning_LOG("不能保存关卡[%s]，因为当前关卡还在分帧读取Actor", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡还在分帧读取Actor", *UXD_LevelFunctionLibrary::GetLevelName(Level));
 			return false;
 		}
 		else if (WorldSettingsComponent->bIsInitingLevel)
 		{
-			SaveGameSystem_Warning_LOG("不能保存关卡[%s]，因为当前关卡还在分帧初始化Actor", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡还在分帧初始化Actor", *UXD_LevelFunctionLibrary::GetLevelName(Level));
 			return false;
 		}
 		else if (Level->bIsBeingRemoved)
 		{
-			SaveGameSystem_Warning_LOG("不能保存关卡[%s]，因为当前关卡正在移除", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡正在移除", *UXD_LevelFunctionLibrary::GetLevelName(Level));
 			return false;
 		}
 		return true;

@@ -7,8 +7,12 @@
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_GameTypeEx.h"
 #include "XD_SaveGameInterface.h"
+#include "XD_LevelFunctionLibrary.h"
 
-FXD_WriteArchive::FXD_WriteArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection) :FXD_ProxyArchiveBase(InInnerArchive), Level(Level), ObjectReferenceCollection(ObjectReferenceCollection)
+FXD_WriteArchive::FXD_WriteArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection) 
+	:FXD_ProxyArchiveBase(InInnerArchive), 
+	Level(Level), 
+	ObjectReferenceCollection(ObjectReferenceCollection)
 {
 	ArIsSaveGame = true;
 
@@ -27,6 +31,9 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 		{
 			if (IsValid(Obj))
 			{
+				// Component不可持有直接引用
+				check(!Obj->IsA<UActorComponent>());
+
 				//资源
 				if (Obj->IsAsset() || Obj->IsA<UClass>())
 				{
@@ -34,9 +41,6 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 				}
 				else if (Obj->IsA<AActor>())
 				{
-					// Component非本Actor不可持有引用
-					check(!Obj->IsA<UActorComponent>());
-
 					if (Obj->HasAnyFlags(RF_InPackageFlags))
 					{
 						return EObjectArchiveType::InPackageActor;
@@ -190,8 +194,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			InPackageSaveData.Path = Actor->GetPathName();
 			FXD_InPackageSaveData::StaticStruct()->SerializeBin(*this, &InPackageSaveData);
 
-			FXD_ActorExtraSaveData ActorExtraSaveData;
-			ActorExtraSaveData.Transform = Actor->GetTransform();
+			FXD_ActorExtraSaveData ActorExtraSaveData{ Actor };
 			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
 
 			FXD_WriteArchiveHelper::SerilizeActorSpecialInfo(*this, Actor);
@@ -214,8 +217,7 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 			DynamicSaveData.Name = Actor->GetName();
 			FXD_DynamicSaveData::StaticStruct()->SerializeBin(*this, &DynamicSaveData);
 
-			FXD_ActorExtraSaveData ActorExtraSaveData;
-			ActorExtraSaveData.Transform = Actor->GetTransform();
+			FXD_ActorExtraSaveData ActorExtraSaveData{ Actor };
 			FXD_ActorExtraSaveData::StaticStruct()->SerializeBin(*this, &ActorExtraSaveData);
 
 			//保存Owner
@@ -263,9 +265,11 @@ FArchive& FXD_WriteArchive::operator<<(class UObject*& Obj)
 #if WITH_EDITOR
 void FXD_WriteArchive::CheckActorError(AActor* Actor)
 {
-	if (ensure(Actor->GetLevel() == Level.Get()) == false)
+	ULevel* TargetLevel = Level.Get();
+	if (Actor->GetLevel() != TargetLevel)
 	{
-		SaveGameSystem_Error_Log("存档系统将保存关卡[%s]之外的Actor%s，应属于关卡[%s]，存档系统反序列化可能出现问题", *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetLevel()));
+		SaveGameSystem_Error_Log("存档系统将保存关卡[%s]之外的Actor%s，应属于关卡[%s]，存档系统反序列化可能出现问题", *UXD_LevelFunctionLibrary::GetLevelName(TargetLevel), *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetLevel()));
+		check(Actor->GetLevel() == TargetLevel);
 	}
 }
 
@@ -275,7 +279,7 @@ void FXD_WriteArchive::CheckDynamicObjectError(const UObject* Object) const
 	{
 		if (AActor* MainActor = TopActor.Top().Get())
 		{
-			for (UObject* NextOuter = Object->GetOuter(); NextOuter != NULL; NextOuter = NextOuter->GetOuter())
+			for (UObject* NextOuter = Object->GetOuter(); NextOuter != nullptr; NextOuter = NextOuter->GetOuter())
 			{
 				if (MainActor == NextOuter)
 				{
