@@ -97,6 +97,7 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 			TSet<TWeakObjectPtr<AActor>> RemainExistActors;
 
 			TArray<UObject*> ObjectReferenceCollection;
+			TArray<UObject*> ObjectExecuteWhenLoadOrder;
 
 			int32 LoadDataIdx = 0;
 			int32 ExecutePostLoadIdx = 0;
@@ -118,7 +119,7 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 				for (;LoadDataIdx < ActorRecorders.Num(); ++LoadDataIdx)
 				{
 					FXD_SaveGameRecorder& XD_Recorder = ActorRecorders[LoadDataIdx];
-					UXD_SaveGameFunctionLibrary::DeserializeObject(XD_Recorder, Level.Get(), ObjectReferenceCollection, SaveLevelBase->OldWorldOrigin);
+					UXD_SaveGameFunctionLibrary::DeserializeObject(XD_Recorder, Level.Get(), SaveLevelBase->OldWorldOrigin, ObjectReferenceCollection, ObjectExecuteWhenLoadOrder);
 
 					if (FPlatformTime::Seconds() - StartTime > TimeLimit)
 					{
@@ -126,10 +127,10 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 					}
 				}
 
-				//分帧执行读取后的事件
-				for (; ExecutePostLoadIdx < ObjectReferenceCollection.Num(); ++ExecutePostLoadIdx)
+				// 分帧执行读取后的事件
+				for (; ExecutePostLoadIdx < ObjectExecuteWhenLoadOrder.Num(); ++ExecutePostLoadIdx)
 				{
-					UObject* Object = ObjectReferenceCollection[ExecutePostLoadIdx];
+					UObject* Object = ObjectExecuteWhenLoadOrder[ExecutePostLoadIdx];
 					if (Object && Object->Implements<UXD_SaveGameInterface>())
 					{
 						IXD_SaveGameInterface::WhenPostLoad(Object);
@@ -198,7 +199,6 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 		if (SplitFrameLoadActors)
 		{
 			FSplitFrameLoadActorHelper* SplitFrameLoadHelper = new FSplitFrameLoadActorHelper(OuterLevel, this);
-
 			FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateRaw(SplitFrameLoadHelper, &FSplitFrameLoadActorHelper::LoadActorsTick));
 		}
 		else

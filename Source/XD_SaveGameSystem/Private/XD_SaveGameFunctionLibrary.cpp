@@ -21,21 +21,21 @@ FXD_SaveGameRecorder UXD_SaveGameFunctionLibrary::SerializeObject(UObject* Objec
 	return BufferArchive;
 }
 
-UObject* UXD_SaveGameFunctionLibrary::DeserializeObject(const FXD_SaveGameRecorder& XD_Recorder, ULevel* Level, TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin)
+UObject* UXD_SaveGameFunctionLibrary::DeserializeObject(const FXD_SaveGameRecorder& XD_Recorder, ULevel* Level, const FIntVector& OldWorldOrigin, TArray<UObject*>& ReferenceCollection, TArray<UObject*>& ObjectExecuteWhenLoadOrder)
 {
 	FMemoryReader MemoryReader(XD_Recorder.Data);
 
-	FXD_ReadArchive XD_ReadArchive(MemoryReader, Level, ReferenceCollection, OldWorldOrigin);
+	FXD_ReadArchive XD_ReadArchive(MemoryReader, Level, ReferenceCollection, ObjectExecuteWhenLoadOrder, OldWorldOrigin);
 	UObject* Object = nullptr;
 	XD_ReadArchive << Object;
 	return Object;
 }
 
-UObject* UXD_SaveGameFunctionLibrary::DeserializeExistObject(const FXD_SaveGameRecorder& XD_Recorder, UObject* Object, ULevel* Level, TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin)
+UObject* UXD_SaveGameFunctionLibrary::DeserializeExistObject(const FXD_SaveGameRecorder& XD_Recorder, UObject* Object, ULevel* Level, const FIntVector& OldWorldOrigin, TArray<UObject*>& ReferenceCollection, TArray<UObject*>& ObjectExecuteWhenLoadOrder)
 {
 	FMemoryReader MemoryReader(XD_Recorder.Data);
 
-	FXD_ReadArchive XD_ReadArchive(MemoryReader, Level, ReferenceCollection, OldWorldOrigin);
+	FXD_ReadArchive XD_ReadArchive(MemoryReader, Level, ReferenceCollection, ObjectExecuteWhenLoadOrder, OldWorldOrigin);
 	XD_ReadArchive << Object;
 	return Object;
 }

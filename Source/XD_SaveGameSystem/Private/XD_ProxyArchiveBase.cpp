@@ -11,9 +11,14 @@
 #include "TimerManager.h"
 
 FXD_ActorExtraSaveData::FXD_ActorExtraSaveData(AActor* Actor)
+	:FXD_ActorExtraSaveData()
 {
 	Transform = Actor->GetActorTransform();
-	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+	if (ACharacter* Character = Cast<ACharacter>(Actor))
+	{
+		LinearVelocity = Character->GetVelocity();
+	}
+	else if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
 	{
 		if (PrimitiveComponent->IsSimulatingPhysics())
 		{
@@ -31,22 +36,29 @@ void FXD_ActorExtraSaveData::LoadData(AActor* Actor, ULevel* Level, const FIntVe
 
 	if (ACharacter* Character = Cast<ACharacter>(Actor))
 	{
-		if (UCharacterMovementComponent* CharacterMovementComponent = Character->GetCharacterMovement())
+		if (!LinearVelocity.IsNearlyZero())
 		{
-			// 直接设置Launch无效，因为MovementMode为None，要先设置MovementMode
-			CharacterMovementComponent->SetMovementMode(MOVE_Walking);
-			CharacterMovementComponent->Launch(LinearVelocity);
+			if (UCharacterMovementComponent* CharacterMovementComponent = Character->GetCharacterMovement())
+			{
+				// 假如速度太大需要检查原因，防止角色飞出边界被销毁
+				if (ensure(LinearVelocity.Size() < 1000000.f))
+				{
+					// 直接设置Launch无效，因为MovementMode为None，要先设置MovementMode
+					CharacterMovementComponent->SetMovementMode(MOVE_Walking);
+					CharacterMovementComponent->Launch(LinearVelocity);
+				}
+			}
 		}
 	}
 	else if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
 	{
 		if (PrimitiveComponent->IsSimulatingPhysics())
 		{
-			if (!LinearVelocity.IsZero())
+			if (!LinearVelocity.IsNearlyZero())
 			{
 				PrimitiveComponent->SetPhysicsLinearVelocity(LinearVelocity);
 			}
-			if (!AngularVelocity.IsZero())
+			if (!AngularVelocity.IsNearlyZero())
 			{
 				PrimitiveComponent->SetPhysicsAngularVelocityInDegrees(AngularVelocity);
 			}

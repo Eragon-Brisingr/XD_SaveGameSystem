@@ -2,13 +2,16 @@
 
 #include "XD_SavePlayerBase.h"
 #include <Kismet/GameplayStatics.h>
-#include "XD_SaveGameFunctionLibrary.h"
 #include <GameFramework/Pawn.h>
 #include <GameFramework/PlayerController.h>
 #include <GameFramework/PlayerState.h>
+#include <TimerManager.h>
+
+#include "XD_SaveGameFunctionLibrary.h"
 #include "XD_DebugFunctionLibrary.h"
 #include "XD_SaveGameSystemBase.h"
 #include "XD_SaveGameSystemUtility.h"
+#include "XD_SaveGameInterface.h"
 
 
 
@@ -46,8 +49,9 @@ bool UXD_SavePlayerBase::SavePlayer_Implementation(APlayerController* PlayerCont
 class APawn* UXD_SavePlayerBase::LoadPlayer_Implementation(APlayerController* PlayerController)
 {
 	TArray<UObject*> ReferenceCollection;
-	UXD_SaveGameFunctionLibrary::DeserializeExistObject(PlayerControllerData, PlayerController, PlayerController->GetLevel(), ReferenceCollection, OldWorldOrigin);
-	APawn* PlayerCharacter = CastChecked<APawn>(UXD_SaveGameFunctionLibrary::DeserializeObject(PlayerCharacterData, PlayerController->GetLevel(), ReferenceCollection, OldWorldOrigin));
+	TArray<UObject*> ObjectExecuteWhenLoadOrder;
+	UXD_SaveGameFunctionLibrary::DeserializeExistObject(PlayerControllerData, PlayerController, PlayerController->GetLevel(), OldWorldOrigin, ReferenceCollection, ObjectExecuteWhenLoadOrder);
+	APawn* PlayerCharacter = CastChecked<APawn>(UXD_SaveGameFunctionLibrary::DeserializeObject(PlayerCharacterData, PlayerController->GetLevel(), OldWorldOrigin, ReferenceCollection, ObjectExecuteWhenLoadOrder));
 	PlayerController->Possess(PlayerCharacter);
 
 	PlayerController->GetWorld()->GetTimerManager().SetTimerForNextTick([=]
@@ -55,7 +59,7 @@ class APawn* UXD_SavePlayerBase::LoadPlayer_Implementation(APlayerController* Pl
 		PlayerController->SetControlRotation(PlayerControllerRotation);
 	});
 
-	for (UObject* Object : ReferenceCollection)
+	for (UObject* Object : ObjectExecuteWhenLoadOrder)
 	{
 		if (Object && Object->Implements<UXD_SaveGameInterface>())
 		{

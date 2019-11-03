@@ -22,10 +22,10 @@ public:
 	static FXD_SaveGameRecorder SerializeObject(UObject* Object, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection);
 
 	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (AutoCreateRefTerm = "ReferenceCollection"))
-	static UObject* DeserializeObject(const FXD_SaveGameRecorder& XD_Recorder, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
+	static UObject* DeserializeObject(const FXD_SaveGameRecorder& XD_Recorder, ULevel* Level, const FIntVector& OldWorldOrigin, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, UPARAM(Ref)TArray<UObject*>& ObjectExecuteWhenLoadOrder);
 
 	UFUNCTION(BlueprintCallable, Category = "游戏|存档", meta = (AutoCreateRefTerm = "ReferenceCollection", DeterminesOutputType = "Object"))
-	static UObject* DeserializeExistObject(const FXD_SaveGameRecorder& XD_Recorder, UObject* Object, ULevel* Level, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, const FIntVector& OldWorldOrigin);
+	static UObject* DeserializeExistObject(const FXD_SaveGameRecorder& XD_Recorder, UObject* Object, ULevel* Level, const FIntVector& OldWorldOrigin, UPARAM(Ref)TArray<UObject*>& ReferenceCollection, UPARAM(Ref)TArray<UObject*>& ObjectExecuteWhenLoadOrder);
 	
 public:
 	UFUNCTION(BlueprintPure, Category = "游戏|存档", meta = (WorldContext = "WorldContextObject"))

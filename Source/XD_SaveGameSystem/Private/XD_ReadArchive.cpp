@@ -17,7 +17,12 @@ FString GetSubObjectName(const TSoftObjectPtr<T>& SoftObjectPtr)
 	return SubObjectName;
 }
 
-FXD_ReadArchive::FXD_ReadArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection, const FIntVector& OldWorldOrigin) :FXD_ProxyArchiveBase(InInnerArchive), Level(Level), ObjectReferenceCollection(ObjectReferenceCollection), OldWorldOrigin(OldWorldOrigin)
+FXD_ReadArchive::FXD_ReadArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection, TArray<UObject*>& ObjectExecuteWhenLoadOrder, const FIntVector& OldWorldOrigin)
+	:FXD_ProxyArchiveBase(InInnerArchive), 
+	Level(Level), 
+	ObjectReferenceCollection(ObjectReferenceCollection),
+	ObjectExecuteWhenLoadOrder(ObjectExecuteWhenLoadOrder),
+	OldWorldOrigin(OldWorldOrigin)
 {
 	ArIsSaveGame = true;
 
@@ -59,6 +64,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 						Component->RegisterComponent();
 					}
 					Ar.ObjectReferenceCollection.Add(Component);
+					Ar.ObjectExecuteWhenLoadOrder.Add(Component);
 					Component->Serialize(Ar);
 					IXD_SaveGameInterface::WhenGameSerialize(Component, Ar);
 				}
@@ -279,6 +285,11 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 		}
 	}
 	Obj = ObjectReferenceCollection[ObjectIndex];
+
+	if (Obj)
+	{
+		ObjectExecuteWhenLoadOrder.Add(Obj);
+	}
 
 	return *this;
 
