@@ -1,8 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "XD_WriteArchive.h"
-#include "GameFramework/Actor.h"
-#include "Components/ActorComponent.h"
+#include <GameFramework/Actor.h>
+#include <Components/ActorComponent.h>
 #include "XD_DebugFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_GameTypeEx.h"

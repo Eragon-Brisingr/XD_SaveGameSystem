@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include <ArchiveProxy.h>
+#include <Serialization/Archive.h>
 #include "XD_ProxyArchiveBase.generated.h"
 
 /**
@@ -90,10 +90,10 @@ struct XD_SAVEGAMESYSTEM_API FXD_ProxyArchiveBase : public FArchiveProxy
 	using FArchive::operator<<; // For visibility of the overloads we don't override
 
 	//~ Begin FArchive Interface
-	virtual FArchive& operator<<(FLazyObjectPtr& Value) override;
-	virtual FArchive& operator<<(FSoftObjectPtr& Value) override;
-	virtual FArchive& operator<<(FSoftObjectPath& Value) override;
-	virtual FArchive& operator<<(FWeakObjectPtr& Value) override;
+	FArchive& operator<<(FLazyObjectPtr& Value) override;
+	FArchive& operator<<(FSoftObjectPtr& Value) override;
+	FArchive& operator<<(FSoftObjectPath& Value) override;
+	FArchive& operator<<(FWeakObjectPtr& Value) override;
 	//~ End FArchive Interface
 };
 

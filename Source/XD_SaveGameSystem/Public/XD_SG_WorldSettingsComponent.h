@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include <Components/ActorComponent.h>
 #include "XD_SG_WorldSettingsComponent.generated.h"
 
 
