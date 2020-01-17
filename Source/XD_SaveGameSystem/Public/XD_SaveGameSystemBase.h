@@ -25,8 +25,8 @@ class XD_SAVEGAMESYSTEM_API UXD_SaveGameSystemBase : public UGameInstanceSubsyst
 	friend class UXD_AutoSavePlayerLambda;
 
 protected:
-	virtual void Initialize(FSubsystemCollectionBase& Collection);
-	virtual void Deinitialize();
+	void Initialize(FSubsystemCollectionBase& Collection) override;
+	void Deinitialize() override;
 public:
 	UXD_SaveGameSystemBase();
 	
