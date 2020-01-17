@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include <GameFramework/SaveGame.h>
+#include "XD_SaveGameRecorder.h"
 #include "XD_SavePlayerBase.generated.h"
 
 /**

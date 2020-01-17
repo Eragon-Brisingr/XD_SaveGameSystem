@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include <UObject/NoExportTypes.h>
+#include <Subsystems/GameInstanceSubsystem.h>
 #include "XD_SaveGameSystemBase.generated.h"
 
 /**
@@ -13,7 +13,7 @@
 class ULevel;
 
 UCLASS()
-class XD_SAVEGAMESYSTEM_API UXD_SaveGameSystemBase : public UObject
+class XD_SAVEGAMESYSTEM_API UXD_SaveGameSystemBase : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
@@ -22,7 +22,11 @@ class XD_SAVEGAMESYSTEM_API UXD_SaveGameSystemBase : public UObject
 	friend class UXD_SaveGameFunctionLibrary;
 	friend class UXD_SG_WorldSettingsComponent;
 	friend struct FXD_ReadArchive;
-	friend class UXD_AutoSavePlayerLamdba;
+	friend class UXD_AutoSavePlayerLambda;
+
+protected:
+	virtual void Initialize(FSubsystemCollectionBase& Collection);
+	virtual void Deinitialize();
 public:
 	UXD_SaveGameSystemBase();
 	
@@ -121,7 +125,7 @@ protected:
 };
 
 UCLASS()
-class UXD_AutoSavePlayerLamdba : public UObject
+class UXD_AutoSavePlayerLambda : public UObject
 {
 	GENERATED_BODY()
 public:

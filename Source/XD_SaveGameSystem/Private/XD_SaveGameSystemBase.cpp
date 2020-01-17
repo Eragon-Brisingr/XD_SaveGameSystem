@@ -9,7 +9,6 @@
 #include <Kismet/GameplayStatics.h>
 #include <Containers/Ticker.h>
 
-#include "XD_SaveGameSystemInterface.h"
 #include "XD_SG_WorldSettingsComponent.h"
 #include "XD_LevelFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
@@ -18,6 +17,18 @@
 #include "XD_SavePlayerBase.h"
 #include "XD_SaveGameInterface.h"
 
+
+void UXD_SaveGameSystemBase::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+}
+
+void UXD_SaveGameSystemBase::Deinitialize()
+{
+	Super::Deinitialize();
+
+}
 
 UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
 	:bEnableAutoSave(true),
@@ -31,15 +42,7 @@ UXD_SaveGameSystemBase::UXD_SaveGameSystemBase()
 UXD_SaveGameSystemBase* UXD_SaveGameSystemBase::Get(const UObject* WorldContextObject)
 {
 	UGameInstance* GameInstance = WorldContextObject->GetWorld()->GetGameInstance();
-	if (GameInstance->Implements<UXD_SaveGame_GameInstanceInterface>())
-	{
-		return IXD_SaveGame_GameInstanceInterface::Execute_GetSaveGameSystem(GameInstance);
-	}
-	else
-	{
-		SaveGameSystem_Warning_Log("GameInstance尚未实现XD_SaveGame_GameInstanceInterface的GetSaveGameSystem");
-		return UXD_SaveGameSystemBase::StaticClass()->GetDefaultObject<UXD_SaveGameSystemBase>();
-	}
+	return GameInstance->GetSubsystem<UXD_SaveGameSystemBase>();
 }
 
 FString UXD_SaveGameSystemBase::MakeFullSlotName(FString SlotCategory, FString SlotName) const
@@ -354,12 +357,12 @@ void UXD_SaveGameSystemBase::RegisterAutoSavePlayer(class APawn* Pawn)
 {
 	if (APlayerController* PlayerController = Cast<APlayerController>(Pawn->GetController()))
 	{
-		UXD_AutoSavePlayerLamdba* AutoSavePlayerLamdba = NewObject<UXD_AutoSavePlayerLamdba>(Pawn);
+		UXD_AutoSavePlayerLambda* AutoSavePlayerLamdba = NewObject<UXD_AutoSavePlayerLambda>(Pawn);
 		AutoSavePlayerLamdba->SetFlags(RF_StrongRefOnFrame);
 		AutoSavePlayerLamdba->PlayerContoller = PlayerController;
 		AutoSavePlayerLamdba->PlayerState = PlayerController->PlayerState;
 		SaveGameSystem_Display_Log("玩家[%s]登记为自动保存", *PlayerController->PlayerState->GetPlayerName());
-		Pawn->OnEndPlay.AddDynamic(AutoSavePlayerLamdba, &UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame);
+		Pawn->OnEndPlay.AddDynamic(AutoSavePlayerLamdba, &UXD_AutoSavePlayerLambda::WhenPlayerLeaveGame);
 	}
 }
 
@@ -368,7 +371,7 @@ void UXD_SaveGameSystemBase::SetSaveGameVersion(int32 Version)
 	FXD_SaveGameVersion::Version = Version;
 }
 
-void UXD_AutoSavePlayerLamdba::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason::Type EndPlayReason)
+void UXD_AutoSavePlayerLambda::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason::Type EndPlayReason)
 {
 	ClearFlags(RF_StrongRefOnFrame);
 
