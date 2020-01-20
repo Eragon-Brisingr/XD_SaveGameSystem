@@ -58,7 +58,7 @@ public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnPreLevelUnload, ULevel*);
 	FOnPreLevelUnload OnPreLevelUnload;
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLoadLevelCompleted, ULevel*, Level);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnLoadLevelCompleted, ULevel*);
 	FOnLoadLevelCompleted OnLoadLevelCompleted;
 private:
 	//只有读取时Spawn的Actor不执行Init
