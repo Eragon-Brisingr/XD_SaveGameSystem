@@ -60,6 +60,9 @@ public:
 
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnLoadLevelCompleted, ULevel*);
 	FOnLoadLevelCompleted OnLoadLevelCompleted;
+
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOnInitLevelCompleted, ULevel*);
+	FOnInitLevelCompleted OnInitLevelCompleted;
 private:
 	//只有读取时Spawn的Actor不执行Init
 	uint8 bShouldInitSpawnActor : 1;

@@ -406,6 +406,10 @@ UXD_SaveGameSystemBase::FInitLevelGuard::~FInitLevelGuard()
 		{
 			WorldSettingsComponent->bIsInitingLevel = false;
 		}
+		if (UXD_SaveGameSystemBase* SaveGameSystem = Get(LevelRef))
+		{
+			SaveGameSystem->OnInitLevelCompleted.Broadcast(LevelRef);
+		}
 	}
 }
 

@@ -35,7 +35,7 @@ class XD_SAVEGAMESYSTEM_API IXD_SaveGameInterface
 {
 	GENERATED_BODY()
 
-		// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	//只有Actor与Component会调用，一般情况要求Actor不存在Owner才能保存
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "游戏|存档")
