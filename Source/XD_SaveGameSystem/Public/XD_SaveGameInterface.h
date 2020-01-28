@@ -35,32 +35,38 @@ class XD_SAVEGAMESYSTEM_API IXD_SaveGameInterface
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+	// 只有Actor与Component会调用的函数
 public:
-	//只有Actor与Component会调用，一般情况要求Actor不存在Owner才能保存
+	// 一般情况要求Actor不存在Owner才能保存
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "游戏|存档")
 	bool NeedSave() const;
 	virtual bool NeedSave_Implementation() const;
-	static bool NeedSave(UObject* Obj) { return IXD_SaveGameInterface::Execute_NeedSave(Obj); }
+	static bool NeedSave(UObject* Obj) { return Execute_NeedSave(Obj); }
 
-	//只有Actor与Component会调用
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenGameInit();
 	virtual void WhenGameInit_Implementation();
 	static void GameInit(UObject* Obj);
 
+	// 只有Actor会调用的函数，初始化和加载时越大优先级越高，存档时相反
+	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
+	int32 GetActorSerializePriority() const;
+	virtual int32 GetActorSerializePriority_Implementation() const { return -1; }
+	static int32 GetActorSerializePriority(UObject* Obj) { return Execute_GetActorSerializePriority(Obj); };
+public:
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenPostLoad();
 	virtual void WhenPostLoad_Implementation();
-	static void WhenPostLoad(UObject* Obj) { IXD_SaveGameInterface::Execute_WhenPostLoad(Obj); }
+	static void WhenPostLoad(UObject* Obj) { Execute_WhenPostLoad(Obj); }
 
 	UFUNCTION(BlueprintNativeEvent, Category = "游戏|读档")
 	void WhenPreSave();
 	virtual void WhenPreSave_Implementation() {}
-	static void WhenPreSave(UObject* Obj) { IXD_SaveGameInterface::Execute_WhenPreSave(Obj); }
+	static void WhenPreSave(UObject* Obj) { Execute_WhenPreSave(Obj); }
 
+	// Native可实作的函数，可塞入定制化的数据
 	virtual void WhenGameSerialize(FArchive& Archive) {}
 	static void WhenGameSerialize(UObject* Obj, FArchive& Archive) { if (IXD_SaveGameInterface* SaveGameInterface = Cast<IXD_SaveGameInterface>(Obj)) SaveGameInterface->WhenGameSerialize(Archive); }
-
+public:
 	static int32 GetSaveGameVersion(FArchive& Archive);
 };

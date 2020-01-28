@@ -158,36 +158,44 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 				FSplitFrameInitActorsHelper(ULevel* Level)
 					:Level(Level), InitLevelGuard(Level)
 				{
-
+					for (AActor* Actor : TArray<AActor*>(Level->Actors))
+					{
+						if (Actor && Actor->Implements<UXD_SaveGameInterface>())
+						{
+							InvokeToInitActors.Add(Actor);
+						}
+					}
+					InvokeToInitActors.Sort([](const TWeakObjectPtr<AActor>& LHS, const TWeakObjectPtr<AActor>& RHS) 
+						{
+							return IXD_SaveGameInterface::GetActorSerializePriority(LHS.Get()) > IXD_SaveGameInterface::GetActorSerializePriority(RHS.Get());
+						});
+					TimeLimit = UXD_SaveGameSystemBase::Get(Level)->SplitFrameLoadActorLimitSeconds;
 				}
 				TWeakObjectPtr<ULevel> Level;
 				FInitLevelGuard InitLevelGuard;
 
-
 				TArray<TWeakObjectPtr<AActor>> InvokeToInitActors;
+				int32 InitIterator = 0;
+				double TimeLimit;
 
 				bool InitActorTick(float DeltaSecond)
 				{
-					constexpr double TimeLimit = 0.005;
-
 					double StartTime = FPlatformTime::Seconds();
-					int InitCount = 0;
-					while (InitCount < InvokeToInitActors.Num())
+					while (InitIterator < InvokeToInitActors.Num())
 					{
-						if (AActor* Actor = InvokeToInitActors[InitCount].Get())
+						if (AActor* Actor = InvokeToInitActors[InitIterator].Get())
 						{
 							UXD_SaveGameSystemBase::NotifyActorAndComponentInit(Actor);
 						}
-						++InitCount;
+						InitIterator += 1;
 
 						if (FPlatformTime::Seconds() - StartTime > TimeLimit)
 						{
 							break;
 						}
 					}
-					InvokeToInitActors.RemoveAt(0, InitCount);
 
-					if (InvokeToInitActors.Num() != 0)
+					if (InitIterator != InvokeToInitActors.Num())
 					{
 						return true;
 					}
@@ -200,25 +208,25 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 			};
 
 			FSplitFrameInitActorsHelper* SplitInitActorsHelper = new FSplitFrameInitActorsHelper(Level);
-			for (AActor* Actor : TArray<AActor*>(Level->Actors))
-			{
-				if (Actor && Actor->Implements<UXD_SaveGameInterface>())
-				{
-					SplitInitActorsHelper->InvokeToInitActors.Add(Actor);
-				}
-			}
-
 			FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateRaw(SplitInitActorsHelper, &FSplitFrameInitActorsHelper::InitActorTick));
 		}
 		else
 		{
 			FInitLevelGuard InitLevelGuard(Level);
-			for (AActor* Actor : TArray<AActor*>(Level->Actors))
+			TArray<AActor*> SortedNeedInitActors;
 			{
-				if (Actor && Actor->Implements<UXD_SaveGameInterface>())
+				for (AActor* Actor : Level->Actors)
 				{
-					NotifyActorAndComponentInit(Actor);
+					if (Actor && Actor->Implements<UXD_SaveGameInterface>())
+					{
+						SortedNeedInitActors.Add(Actor);
+					}
 				}
+				SortedNeedInitActors.Sort([](AActor& LHS, AActor& RHS) {return IXD_SaveGameInterface::GetActorSerializePriority(&LHS) > IXD_SaveGameInterface::GetActorSerializePriority(&RHS); });
+			}
+			for (AActor* Actor : SortedNeedInitActors)
+			{
+				NotifyActorAndComponentInit(Actor);
 			}
 		}
 	}

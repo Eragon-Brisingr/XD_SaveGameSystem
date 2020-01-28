@@ -11,9 +11,6 @@ const FName FXD_SaveGameVersion::FriendlyName = TEXT("XD_SaveGame");
 
 int32 FXD_SaveGameVersion::Version = FXD_SaveGameVersion::Original;
 
-
-// Add default functionality here for any IXD_SaveGameInterface functions that are not pure virtual.
-
 //Init的时候可能会SpawnActor，不能用bool
 int32 WhenGameInitIsOverride;
 
