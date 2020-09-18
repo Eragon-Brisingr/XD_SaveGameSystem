@@ -3,8 +3,7 @@
 #include "XD_ReadArchive.h"
 #include <GameFramework/Actor.h>
 #include <Engine/World.h>
-#include "XD_DebugFunctionLibrary.h"
-#include "XD_LevelFunctionLibrary.h"
+
 #include "XD_SaveGameInterface.h"
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_SaveGameSystemBase.h"
@@ -106,7 +105,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 
 			if (findObject == nullptr)
 			{
-				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(InPackageSaveData.Path), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *InPackageSaveData.Path.GetLongPackageName());
+				SaveGameSystem_Error_Log("读取Object[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(InPackageSaveData.Path), *SaveGameSystemUtility::GetLevelName(Level.Get()), *InPackageSaveData.Path.GetLongPackageName());
 
 				findObject = NewObject<UObject>(Level.Get(), InPackageSaveData.ClassPath.LoadSynchronous(), *GetSubObjectName(InPackageSaveData.Path));
 				findObject->ConditionalBeginDestroy();
@@ -148,7 +147,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			UObject* Object = StaticFindObject(ObjectClass, Outer, *ObjectName, true);
 			if (Object)
 			{
-				SaveGameSystem_Warning_Log("因动态生成的Object%s已存在于%s中，请检查原因", *UXD_DebugFunctionLibrary::GetDebugName(Object), *UXD_DebugFunctionLibrary::GetDebugName(Outer));
+				SaveGameSystem_Warning_Log("因动态生成的Object%s已存在于%s中，请检查原因", *Object->GetName(), *Outer->GetName());
 			}
 			else
 			{
@@ -178,7 +177,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			{
 				bIsInvalidActor = true;
 
-				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(ActorPath), *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()), *ActorPath.GetLongPackageName());
+				SaveGameSystem_Error_Log("读取Actor[%s]失败，无法在[%s]中找到，原路径为[%s]", *GetSubObjectName(ActorPath), *SaveGameSystemUtility::GetLevelName(Level.Get()), *ActorPath.GetLongPackageName());
 
 				FActorSpawnParameters ActorSpawnParameters;
 				ActorSpawnParameters.Name = *GetSubObjectName(ActorPath);
@@ -220,14 +219,14 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 				Actor = FindObject<AActor>(Level.Get(), *ActorName);
 				if (Actor)
 				{
-					SaveGameSystem_Warning_Log("应Spawn的Actor%s存在于关卡%s中，请检查原因", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Level.Get()));
+					SaveGameSystem_Warning_Log("应Spawn的Actor%s存在于关卡%s中，请检查原因", *Actor->GetName(), *SaveGameSystemUtility::GetLevelName(Level.Get()));
 				}
 			}
 			if (Actor)
 			{
 				if (!Actor->IsA(ActorClass))
 				{
-					SaveGameSystem_Error_Log("提供反序列化的Actor%s类型%s与存档%s不匹配", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetClass()), *UXD_DebugFunctionLibrary::GetDebugName(ActorClass));
+					SaveGameSystem_Error_Log("提供反序列化的Actor%s类型%s与存档%s不匹配", *Actor->GetName(), *Actor->GetClass()->GetName(), *ActorClass->GetName());
 				}
 			}
 			else
@@ -275,7 +274,7 @@ FArchive& FXD_ReadArchive::operator<<(class UObject*& Obj)
 			{
 				if (Actor->GetOwner() == nullptr || Actor->GetOwner()->IsPendingKillPending())
 				{
-					SaveGameSystem_Warning_Log("应Spawn的Actor%s在关卡%s中无法找到Owner，一般原因是Owner被删除", *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Level.Get()));
+					SaveGameSystem_Warning_Log("应Spawn的Actor%s在关卡%s中无法找到Owner，一般原因是Owner被删除", *Actor->GetName(), *SaveGameSystemUtility::GetLevelName(Level.Get()));
 					Actor->Destroy();
 					ObjectReferenceCollection[AddIndex] = nullptr;
 				}

@@ -1,14 +1,14 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "XD_ProxyArchiveBase.h"
+#include <Components/PrimitiveComponent.h>
+#include <Engine/Level.h>
 #include <GameFramework/Actor.h>
-#include "Components/PrimitiveComponent.h"
-#include "Engine/Level.h"
-#include "XD_LevelFunctionLibrary.h"
 #include <GameFramework/Character.h>
 #include "GameFramework/CharacterMovementComponent.h"
 #include <Engine/World.h>
 #include <TimerManager.h>
+#include <Kismet/GameplayStatics.h>
 
 FXD_ActorExtraSaveData::FXD_ActorExtraSaveData(AActor* Actor)
 	:FXD_ActorExtraSaveData()
@@ -31,7 +31,14 @@ FXD_ActorExtraSaveData::FXD_ActorExtraSaveData(AActor* Actor)
 void FXD_ActorExtraSaveData::LoadData(AActor* Actor, ULevel* Level, const FIntVector& OldWorldOrigin) const
 {
 	FTransform ActorTransForm = Transform;
-	ActorTransForm.SetLocation(UXD_LevelFunctionLibrary::GetFixedWorldLocation(Level, OldWorldOrigin, ActorTransForm.GetLocation()));
+
+	auto GetFixedWorldLocation = [](const UObject* WorldContextObject, const FIntVector& OldWorldOrigin, const FVector& WorldLocation)
+	{
+		FIntVector WorldOffset = OldWorldOrigin - UGameplayStatics::GetWorldOriginLocation(WorldContextObject);
+		return FVector(WorldLocation.X + WorldOffset.X, WorldLocation.Y + WorldOffset.Y, WorldLocation.Z + WorldOffset.Z);
+	};
+	
+	ActorTransForm.SetLocation(GetFixedWorldLocation(Level, OldWorldOrigin, ActorTransForm.GetLocation()));
 	Actor->SetActorTransform(ActorTransForm, false, nullptr, ETeleportType::TeleportPhysics);
 
 	if (ACharacter* Character = Cast<ACharacter>(Actor))

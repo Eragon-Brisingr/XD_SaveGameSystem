@@ -8,8 +8,6 @@
 #include "XD_SaveGameInterface.h"
 #include "XD_SaveGameSystemBase.h"
 #include "XD_SaveGameFunctionLibrary.h"
-#include "XD_DebugFunctionLibrary.h"
-#include "XD_LevelFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
 
 bool UXD_SaveLevelBase::SaveLevel(ULevel* OuterLevel)
@@ -43,18 +41,18 @@ bool UXD_SaveLevelBase::SaveLevel(ULevel* OuterLevel)
 			FString SavedObjectsDesc;
 			for (UObject* Object : ObjectReferenceCollection)
 			{
-				SavedObjectsDesc += UXD_DebugFunctionLibrary::GetDebugName(Object) + " | ";
+				SavedObjectsDesc += Object->GetName() + " | ";
 			}
 
 			if (Result)
 			{
-				SaveGameSystem_Display_Log("--------------------------------------保存关卡[%s]成功--------------------------------------", *UXD_LevelFunctionLibrary::GetLevelName(OuterLevel));
+				SaveGameSystem_Display_Log("--------------------------------------保存关卡[%s]成功--------------------------------------", *SaveGameSystemUtility::GetLevelName(OuterLevel));
 
 				SaveGameSystem_Display_Log("保存的Object列表：%s", *SavedObjectsDesc);
 			}
 			else
 			{
-				SaveGameSystem_Error_Log("\n保存关卡[%s]失败", *UXD_LevelFunctionLibrary::GetLevelName(OuterLevel));
+				SaveGameSystem_Error_Log("\n保存关卡[%s]失败", *SaveGameSystemUtility::GetLevelName(OuterLevel));
 			}
 		}
 
@@ -207,19 +205,19 @@ void UXD_SaveLevelBase::LoadLevel(ULevel* OuterLevel, const bool SplitFrameLoadA
 						FString LoadedObjectsDesc;
 						for (UObject* Object : ObjectReferenceCollection)
 						{
-							LoadedObjectsDesc += UXD_DebugFunctionLibrary::GetDebugName(Object) + TEXT(" | ");
+							LoadedObjectsDesc += Object->GetName() + TEXT(" | ");
 						}
 
 						FString DestroyedActorsDesc;
 						for (const TWeakObjectPtr<AActor>& Actor : NeedDestroyActors)
 						{
-							if (Actor.IsValid())
+							if (AActor* ActorPtr = Actor.Get())
 							{
-								DestroyedActorsDesc += UXD_DebugFunctionLibrary::GetDebugName(Actor.Get()) + TEXT(" | ");
+								DestroyedActorsDesc += ActorPtr->GetName() + TEXT(" | ");
 							}
 						}
 
-						SaveGameSystem_Display_Log("--------------------------------------读取关卡[%s]--------------------------------------", *UXD_LevelFunctionLibrary::GetLevelName(Level.Get()));
+						SaveGameSystem_Display_Log("--------------------------------------读取关卡[%s]--------------------------------------", *SaveGameSystemUtility::GetLevelName(Level.Get()));
 
 						SaveGameSystem_Display_Log("读取的Object列表：%s", *LoadedObjectsDesc);
 

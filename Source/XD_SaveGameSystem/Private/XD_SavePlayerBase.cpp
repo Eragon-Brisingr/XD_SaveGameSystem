@@ -8,7 +8,6 @@
 #include <TimerManager.h>
 
 #include "XD_SaveGameFunctionLibrary.h"
-#include "XD_DebugFunctionLibrary.h"
 #include "XD_SaveGameSystemBase.h"
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_SaveGameInterface.h"
@@ -41,7 +40,7 @@ bool UXD_SavePlayerBase::SavePlayer_Implementation(APlayerController* PlayerCont
 
 	bool Result = UGameplayStatics::SaveGameToSlot(this, GetFullPlayerSlotName(PlayerState), SaveGameSystem->UserIndex);
 
-	SaveGameSystem_Display_Log("保存玩家[%s]，角色%s，控制器%s", *PlayerSaveSlotName, *UXD_DebugFunctionLibrary::GetDebugName(Pawn), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
+	SaveGameSystem_Display_Log("保存玩家[%s]，角色%s，控制器%s", *PlayerSaveSlotName, *Pawn->GetName(), *PlayerController->GetName());
 
 	return Result;
 }
@@ -67,7 +66,7 @@ class APawn* UXD_SavePlayerBase::LoadPlayer_Implementation(APlayerController* Pl
 		}
 	}
 
-	SaveGameSystem_Display_Log("读取玩家[%s]，角色%s，控制器%s", *GetPlayerSaveSlotName(PlayerController->PlayerState), *UXD_DebugFunctionLibrary::GetDebugName(PlayerCharacter), *UXD_DebugFunctionLibrary::GetDebugName(PlayerController));
+	SaveGameSystem_Display_Log("读取玩家[%s]，角色%s，控制器%s", *GetPlayerSaveSlotName(PlayerController->PlayerState), *PlayerCharacter->GetName(), *PlayerController->GetName());
 
 	return PlayerCharacter;
 }

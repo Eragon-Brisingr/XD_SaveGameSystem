@@ -38,7 +38,6 @@ public class XD_SaveGameSystem : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-                "XD_UnrealLibraryEx",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

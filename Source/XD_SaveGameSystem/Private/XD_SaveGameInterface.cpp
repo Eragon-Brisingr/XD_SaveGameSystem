@@ -2,7 +2,6 @@
 
 #include "XD_SaveGameInterface.h"
 #include "XD_SaveGameSystemUtility.h"
-#include "XD_DebugFunctionLibrary.h"
 
 
 const FGuid FXD_SaveGameVersion::Guid = FGuid(0x717F9EE7, 0xE9B0493A, 0x88B39123, 0x1B382222);
@@ -23,7 +22,7 @@ void IXD_SaveGameInterface::GameInit(UObject* Object)
 
 	if (ChachWhenGameInitIsOverride == WhenGameInitIsOverride)
 	{
-		SaveGameSystem_Display_Log("初始化%s", *UXD_DebugFunctionLibrary::GetDebugName(Object));
+		SaveGameSystem_Display_Log("初始化%s", *Object->GetName());
 		WhenGameInitIsOverride -= 1;
 	}
 }

@@ -10,10 +10,8 @@
 #include <Containers/Ticker.h>
 
 #include "XD_SG_WorldSettingsComponent.h"
-#include "XD_LevelFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
 #include "XD_SaveLevelBase.h"
-#include "XD_ActorFunctionLibrary.h"
 #include "XD_SavePlayerBase.h"
 #include "XD_SaveGameInterface.h"
 
@@ -89,7 +87,7 @@ void UXD_SaveGameSystemBase::StopAutoSave(UObject* WorldContextObject)
 {
 	for (ULevel* Level : WorldContextObject->GetWorld()->GetLevels())
 	{
-		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 		{
 			WorldSettingsComponent->bActiveAutoSave = false;
 		}
@@ -98,7 +96,7 @@ void UXD_SaveGameSystemBase::StopAutoSave(UObject* WorldContextObject)
 
 bool UXD_SaveGameSystemBase::IsAutoSaveLevel(UObject* WorldContextObject)
 {
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(WorldContextObject->GetWorld()->PersistentLevel)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(WorldContextObject->GetWorld()->PersistentLevel)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
 		return WorldSettingsComponent->bActiveAutoSave;
 	}
@@ -232,7 +230,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 	}
 
 	//或许有更好的时机去保存关卡
-	if (AWorldSettings* WorldSettings = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level))
+	if (AWorldSettings* WorldSettings = SaveGameSystemUtility::GetCurrentLevelWorldSettings(Level))
 	{
 		//子层级的WorldSettings不设置BegunPlay状态，手动调用
 		if (WorldSettings->HasActorBegunPlay() == false)
@@ -240,7 +238,9 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 			WorldSettings->DispatchBeginPlay();
 		}
 
-		UXD_SG_WorldSettingsComponent* SG_WorldSettingsComponent = UXD_ActorFunctionLibrary::AddComponent<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
+		UXD_SG_WorldSettingsComponent* SG_WorldSettingsComponent = NewObject<UXD_SG_WorldSettingsComponent>(WorldSettings, TEXT("SG_WorldSettingsComponent"));
+		WorldSettings->AddOwnedComponent(SG_WorldSettingsComponent);
+		SG_WorldSettingsComponent->RegisterComponent();
 		SG_WorldSettingsComponent->OnWorldSettingsComponentEndPlay.AddWeakLambda(this, [=](const EEndPlayReason::Type EndPlayReason)
 		{
 			OnPreLevelUnload.Broadcast(Level);
@@ -248,7 +248,7 @@ void UXD_SaveGameSystemBase::LoadLevelOrInitLevel(ULevel* Level, const bool Spli
 	}
 	else
 	{
-		SaveGameSystem_Error_Log("关卡[%s]不存在WorldSettings，自动保存该关卡将失效", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+		SaveGameSystem_Error_Log("关卡[%s]不存在WorldSettings，自动保存该关卡将失效", *SaveGameSystemUtility::GetLevelName(Level));
 	}
 }
 
@@ -277,7 +277,7 @@ void UXD_SaveGameSystemBase::NotifyActorAndComponentInit(AActor* Actor)
 
 FString UXD_SaveGameSystemBase::MakeLevelSlotName(ULevel* Level)
 {
-	return Get(Level)->MakeFullSlotName(TEXT("Level"), UXD_LevelFunctionLibrary::GetLevelName(Level));
+	return Get(Level)->MakeFullSlotName(TEXT("Level"), SaveGameSystemUtility::GetLevelName(Level));
 }
 
 bool UXD_SaveGameSystemBase::SaveLevel(ULevel* Level) const
@@ -288,21 +288,21 @@ bool UXD_SaveGameSystemBase::SaveLevel(ULevel* Level) const
 
 bool UXD_SaveGameSystemBase::CanSaveLevel(ULevel* Level)
 {
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
 		if (WorldSettingsComponent->bIsLoadingLevel)
 		{
-			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡还在分帧读取Actor", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡还在分帧读取Actor", *SaveGameSystemUtility::GetLevelName(Level));
 			return false;
 		}
 		else if (WorldSettingsComponent->bIsInitingLevel)
 		{
-			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡还在分帧初始化Actor", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡还在分帧初始化Actor", *SaveGameSystemUtility::GetLevelName(Level));
 			return false;
 		}
 		else if (Level->bIsBeingRemoved)
 		{
-			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡正在移除", *UXD_LevelFunctionLibrary::GetLevelName(Level));
+			SaveGameSystem_Warning_Log("不能保存关卡[%s]，因为当前关卡正在移除", *SaveGameSystemUtility::GetLevelName(Level));
 			return false;
 		}
 		return true;
@@ -312,7 +312,7 @@ bool UXD_SaveGameSystemBase::CanSaveLevel(ULevel* Level)
 
 bool UXD_SaveGameSystemBase::IsLevelInitCompleted(ULevel* Level)
 {
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
 		return WorldSettingsComponent->bIsLoadingLevel == false && WorldSettingsComponent->bIsInitingLevel == false;
 	}
@@ -398,7 +398,7 @@ void UXD_AutoSavePlayerLambda::WhenPlayerLeaveGame(AActor* Actor, EEndPlayReason
 UXD_SaveGameSystemBase::FInitLevelGuard::FInitLevelGuard(ULevel* Level) 
 	:Level(Level)
 {
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
 		check(WorldSettingsComponent->bIsLoadingLevel == false);
 
@@ -410,7 +410,7 @@ UXD_SaveGameSystemBase::FInitLevelGuard::~FInitLevelGuard()
 {
 	if (ULevel* LevelRef = Level.Get())
 	{
-		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(LevelRef)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(LevelRef)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 		{
 			WorldSettingsComponent->bIsInitingLevel = false;
 		}
@@ -424,7 +424,7 @@ UXD_SaveGameSystemBase::FInitLevelGuard::~FInitLevelGuard()
 UXD_SaveGameSystemBase::FLoadLevelGuard::FLoadLevelGuard(ULevel* Level)
 	:Level(Level)
 {
-	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+	if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(Level)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 	{
 		check(WorldSettingsComponent->bIsInitingLevel == false);
 
@@ -436,7 +436,7 @@ UXD_SaveGameSystemBase::FLoadLevelGuard::~FLoadLevelGuard()
 {
 	if (ULevel* LevelRef = Level.Get())
 	{
-		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = UXD_LevelFunctionLibrary::GetCurrentLevelWorldSettings(LevelRef)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
+		if (UXD_SG_WorldSettingsComponent* WorldSettingsComponent = SaveGameSystemUtility::GetCurrentLevelWorldSettings(LevelRef)->FindComponentByClass<UXD_SG_WorldSettingsComponent>())
 		{
 			WorldSettingsComponent->bIsLoadingLevel = false;
 		}

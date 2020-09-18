@@ -3,11 +3,8 @@
 #include "XD_WriteArchive.h"
 #include <GameFramework/Actor.h>
 #include <Components/ActorComponent.h>
-#include "XD_DebugFunctionLibrary.h"
 #include "XD_SaveGameSystemUtility.h"
-#include "XD_GameTypeEx.h"
 #include "XD_SaveGameInterface.h"
-#include "XD_LevelFunctionLibrary.h"
 
 FXD_WriteArchive::FXD_WriteArchive(FArchive& InInnerArchive, class ULevel* Level, TArray<UObject*>& ObjectReferenceCollection) 
 	:FXD_ProxyArchiveBase(InInnerArchive), 
@@ -268,7 +265,7 @@ void FXD_WriteArchive::CheckActorError(AActor* Actor)
 	ULevel* TargetLevel = Level.Get();
 	if (Actor->GetLevel() != TargetLevel)
 	{
-		SaveGameSystem_Error_Log("存档系统将保存关卡[%s]之外的Actor%s，应属于关卡[%s]，存档系统反序列化可能出现问题", *UXD_LevelFunctionLibrary::GetLevelName(TargetLevel), *UXD_DebugFunctionLibrary::GetDebugName(Actor), *UXD_DebugFunctionLibrary::GetDebugName(Actor->GetLevel()));
+		SaveGameSystem_Error_Log("存档系统将保存关卡[%s]之外的Actor%s，应属于关卡[%s]，存档系统反序列化可能出现问题", *SaveGameSystemUtility::GetLevelName(TargetLevel), *Actor->GetName(), *SaveGameSystemUtility::GetLevelName(Actor->GetLevel()));
 		check(Actor->GetLevel() == TargetLevel);
 	}
 }
@@ -286,7 +283,7 @@ void FXD_WriteArchive::CheckDynamicObjectError(const UObject* Object) const
 					return;
 				}
 			}
-			SaveGameSystem_Error_Log("%s的Outer链中不存在%s的Actor，请使用SoftObjectPtr代替直接引用", *UXD_DebugFunctionLibrary::GetDebugName(Object), *UXD_DebugFunctionLibrary::GetDebugName(MainActor));
+			SaveGameSystem_Error_Log("%s的Outer链中不存在%s的Actor，请使用SoftObjectPtr代替直接引用", *Object->GetName(), *MainActor->GetName());
 		}
 	}
 }
